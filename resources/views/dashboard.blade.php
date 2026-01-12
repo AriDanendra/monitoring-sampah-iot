@@ -3,92 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Monitoring Sampah Parepare</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Dashboard - Smart Waste IoT</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard-wrapper">
         <aside class="sidebar">
-            <div class="brand">Sistem Monitoring Tempat Sampah Parepare</div>
-            <nav>
+            <div class="sidebar-header">
+                <div class="logo-box">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <span>SmartTrash <small>Parepare</small></span>
+            </div>
+            
+            <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="#">Dashboard</a></li>
-                    <li><a href="#">Status Lokasi</a></li>
-                    <li><a href="#">Histori</a></li>
-                    <li><a href="#">Logout</a></li>
+                    <li class="active"><a href="#"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fa-solid fa-map-location-dot"></i> Status Lokasi</a></li>
+                    <li><a href="#"><i class="fa-solid fa-clock-rotate-left"></i> Histori</a></li>
+                    <li class="nav-divider"></li>
+                    <li><a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>
 
-        <main class="content">
-            <header class="top-bar">
-                <div class="user-profile">
-                    <img src="user-icon.png" alt="User">
-                    <span>User</span>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h1>Ringkasan Sistem</h1>
+                    <p>Selamat datang kembali, Pengelola Kebersihan.</p>
+                </div>
+                <div class="header-right">
+                    <div class="notification-bell">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="dot"></span>
+                    </div>
+                    <div class="profile-chip">
+                        <img src="{{ asset('user-icon.png') }}" alt="User">
+                        <div class="profile-info">
+                            <span class="name">Ari Danendra</span>
+                            <span class="role">Admin</span>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <section class="dashboard-section">
-                <h2>Dashboard</h2>
-                <hr>
-
-                <div class="cards-container">
-                    <div class="card blue">
-                        <div class="card-info">
-                            <h3>Total lokasi Terpantau</h3>
-                            <p class="count">4 Lokasi</p>
+            <div class="dashboard-body">
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-content">
+                            <span class="stat-label">Total Lokasi</span>
+                            <h2 class="stat-value">4 <small>Titik</small></h2>
                         </div>
-                        <div class="card-footer">More Info &rarr;</div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fa-solid fa-location-arrow"></i>
+                        </div>
                     </div>
 
-                    <div class="card red">
-                        <div class="card-info">
-                            <h3>Titik Penuh (Siap angkut)</h3>
-                            <p class="count">1 Lokasi</p>
+                    <div class="stat-card red">
+                        <div class="stat-content">
+                            <span class="stat-label">Titik Penuh</span>
+                            <h2 class="stat-value">1 <small>Lokasi</small></h2>
                         </div>
-                        <div class="card-footer">More Info &rarr;</div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fa-solid fa-dumpster"></i>
+                        </div>
                     </div>
 
-                    <div class="card yellow">
-                        <div class="card-info">
-                            <h3>Perangkat Aktif</h3>
-                            <p class="count">2/4 Aktif</p>
+                    <div class="stat-card yellow">
+                        <div class="stat-content">
+                            <span class="stat-label">ESP32 Aktif</span>
+                            <h2 class="stat-value">2 <small>/ 4 Perangkat</small></h2>
                         </div>
-                        <div class="card-footer">More Info &rarr;</div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <h3>Status Lokasi Real Time</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Lokasi</th>
-                                <th>Keterisian (Volume)</th>
-                                <th>Status</th>
-                                <th>Sinkronisasi Terakhir</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>Lokasi A</td>
-                                <td>95% (Penuh)</td>
-                                <td><span class="badge active">Aktif</span></td>
-                                <td>Baru Saja</td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Lokasi B</td>
-                                <td>50% (Aman)</td>
-                                <td><span class="badge active">Aktif</span></td>
-                                <td>2 menit yang lalu</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>Status Real-Time Sensor</h3>
+                        <button class="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-card">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Titik Lokasi</th>
+                                    <th>Kapasitas Sampah</th>
+                                    <th>Sinyal Perangkat</th>
+                                    <th>Update Terakhir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>01</td>
+                                    <td><strong>Lokasi A</strong> (Jl. Bau Massepe)</td>
+                                    <td><div class="progress-container"><div class="progress-bar red" style="width: 95%"></div><span>95%</span></div></td>
+                                    <td><span class="status-badge online">Online</span></td>
+                                    <td>10 Detik Lalu</td>
+                                </tr>
+                                <tr>
+                                    <td>02</td>
+                                    <td><strong>Lokasi B</strong> (Soreang)</td>
+                                    <td><div class="progress-container"><div class="progress-bar orange" style="width: 50%"></div><span>50%</span></div></td>
+                                    <td><span class="status-badge online">Online</span></td>
+                                    <td>2 Menit Lalu</td>
+                                </tr>
+                                <tr>
+                                    <td>03</td>
+                                    <td><strong>Lokasi C</strong> (Ujung)</td>
+                                    <td><div class="progress-container"><div class="progress-bar grey" style="width: 5%"></div><span>5%</span></div></td>
+                                    <td><span class="status-badge offline">Offline</span></td>
+                                    <td>2 Jam Lalu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 </body>
