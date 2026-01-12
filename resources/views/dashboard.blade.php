@@ -7,6 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('style.css') }}">
+    <style>
+        /* CSS tambahan untuk indikator bau */
+        .bau-normal { color: #10b981; font-weight: 600; } /* Hijau */
+        .bau-bahaya { color: #f59e0b; font-weight: 600; } /* Oranye */
+    </style>
 </head>
 <body>
     <div class="dashboard-wrapper">
@@ -70,7 +75,7 @@
                                     <th>ID</th>
                                     <th>Lokasi</th>
                                     <th>Kapasitas</th>
-                                    <th>Status</th>
+                                    <th>Bau (MQ-135)</th> <th>Status</th>
                                     <th>Update</th>
                                 </tr>
                             </thead>
@@ -81,6 +86,13 @@
                                     <td><strong>{{ $item['lokasi'] }}</strong></td>
                                     <td>
                                         <span style="font-weight: 600;">{{ $item['persen'] }}%</span>
+                                    </td>
+                                    <td>
+                                        @if($item['bau'] >= 400)
+                                            <span class="bau-bahaya">{{ $item['bau'] }} PPM (Berbau)</span>
+                                        @else
+                                            <span class="bau-normal">{{ $item['bau'] }} PPM</span>
+                                        @endif
                                     </td>
                                     <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                                     <td>{{ $item['update'] }}</td>

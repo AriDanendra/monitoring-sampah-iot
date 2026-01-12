@@ -40,7 +40,7 @@
         .timeline-container { border-left: 3px solid #6366f1; margin-left: 10px; padding-left: 20px; position: relative; margin-top: 10px; }
         .step-card { background: #f8fafc; border-radius: 8px; padding: 10px; margin-bottom: 15px; position: relative; border: 1px solid #e2e8f0; }
         .step-card::before { content: ''; position: absolute; left: -27px; top: 12px; width: 12px; height: 12px; background: #6366f1; border-radius: 50%; border: 3px solid white; }
-        .step-destination { font-weight: 700; color: #1e293b; display: block; margin-bottom: 5px; font-size: 14px; }
+        .step-destination { font-weight: 700; color: #1e293b; display: block; font-size: 14px; }
         .step-details { font-size: 12px; color: #64748b; line-height: 1.5; }
 
         /* Sembunyikan panel bawaan Leaflet agar rapi */
@@ -55,7 +55,7 @@
             <header class="top-header">
                 <div class="header-left">
                     <h1>Monitoring & Rute Optimal</h1>
-                    <p>Navigasi efisien dari kantor pusat ke titik penjemputan[cite: 156].</p>
+                    <p>Navigasi efisien dari kantor pusat ke titik penjemputan.</p>
                 </div>
             </header>
 
@@ -103,7 +103,7 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // Registrasi Bahasa Indonesia untuk Navigasi [cite: 162]
+        // Registrasi Bahasa Indonesia untuk Navigasi
         L.Routing.Localization['id'] = {
             directions: { North: 'Utara', Northeast: 'Timur Laut', East: 'Timur', Southeast: 'Tenggara', South: 'Selatan', Southwest: 'Barat Daya', West: 'Barat', Northwest: 'Barat Laut' },
             instructions: {
@@ -124,7 +124,7 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Marker Kantor Pusat (Depot) [cite: 294, 299]
+        // Marker Kantor Pusat (Depot)
         const iconKantor = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/167/167707.png',
             iconSize: [40, 40]
@@ -133,7 +133,7 @@
             .addTo(map)
             .bindPopup("<b>Kantor Pusat (Mulai/Selesai)</b>");
 
-        // Marker Lokasi Sampah [cite: 280]
+        // Marker Lokasi Sampah
         dataDevices.forEach(d => {
             let statusText = (d.bau && d.bau >= 400) ? "<br><span style='color:orange'>Status: Berbau</span>" : "";
             L.marker([d.lat, d.lng])
@@ -147,9 +147,9 @@
             return Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2));
         }
 
-        // Algoritma Nearest Neighbour Sesuai Metodologi [cite: 292-299]
+        // Algoritma Nearest Neighbour Sesuai Metodologi
         function urutkanDenganNearestNeighbour() {
-            // Filter: Hanya lokasi penuh (>=80%) atau berbau (>=400ppm) [cite: 161, 321]
+            // Filter: Hanya lokasi penuh (>=80%) atau berbau (>=400ppm)
             let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 400)); 
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
             let ruteTerurut = [L.latLng(dataKantor.lat, dataKantor.lng)];
@@ -176,7 +176,7 @@
                 currentPos = { lat: titikTerdekat.lat, lng: titikTerdekat.lng }; 
             }
 
-            ruteTerurut.push(L.latLng(dataKantor.lat, dataKantor.lng)); // Kembali ke Depot [cite: 299]
+            ruteTerurut.push(L.latLng(dataKantor.lat, dataKantor.lng)); // Kembali ke Depot
             return ruteTerurut;
         }
 
@@ -192,13 +192,13 @@
 
             routingControl = L.Routing.control({
                 waypoints: waypoints,
-                language: 'id', // Gunakan lokalisasi yang didaftarkan
+                language: 'id',
                 routeWhileDragging: false,
                 addWaypoints: false,
                 createMarker: function() { return null; }
             }).addTo(map);
 
-            // Olah instruksi menjadi tampilan Timeline yang mudah dibaca [cite: 282, 283]
+            // Olah instruksi menjadi tampilan Timeline tanpa jarak dan waktu
             routingControl.on('routesfound', function(e) {
                 const routes = e.routes[0];
                 const instructions = routes.instructions;
@@ -220,13 +220,9 @@
 
                         let card = document.createElement('div');
                         card.className = 'step-card';
-                        card.innerHTML = `
-                            <span class="step-destination">${locationName}</span>
-                            <div class="step-details">
-                                Jarak: ${(instr.distance / 1000).toFixed(2)} km <br>
-                                Estimasi waktu tiba: ${Math.round(instr.time / 60)} menit
-                            </div>
-                        `;
+                        // Bagian ini telah dimodifikasi untuk hanya menampilkan nama lokasi saja
+                        card.innerHTML = `<span class="step-destination">${locationName}</span>`;
+                        
                         instructionContainer.appendChild(card);
                         waypointCount++;
                     }
