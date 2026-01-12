@@ -10,7 +10,7 @@
     <style>
         /* CSS tambahan untuk indikator bau */
         .bau-normal { color: #10b981; font-weight: 600; } /* Hijau */
-        .bau-bahaya { color: #f59e0b; font-weight: 600; } /* Oranye */
+        .bau-bahaya { color: #ef4444; font-weight: 700; } /* Merah */
     </style>
 </head>
 <body>
@@ -23,16 +23,7 @@
                     <h1>Statistik Utama</h1>
                     <p>Pantau status perangkat secara real-time.</p>
                 </div>
-                <div class="header-right">
-                    <div class="profile-chip">
-                        <img src="{{ asset('user-icon.png') }}" alt="Admin">
-                        <div class="profile-info">
-                            <span class="name">Ari Danendra</span>
-                            <span class="role">Administrator</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+                </header>
 
             <div class="dashboard-body">
                 <div class="stats-grid">
@@ -46,7 +37,7 @@
 
                     <div class="stat-card orange">
                         <div class="stat-content">
-                            <span class="stat-label">Titik Penuh (Siap Angkut)</span>
+                            <span class="stat-label">Titik Perlu Angkut</span>
                             <h2 class="stat-value">{{ $titikPenuh }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-trash-can"></i></div>
@@ -75,7 +66,8 @@
                                     <th>ID</th>
                                     <th>Lokasi</th>
                                     <th>Kapasitas</th>
-                                    <th>Bau (MQ-135)</th> <th>Status</th>
+                                    <th>Tingkat Bau</th>
+                                    <th>Status Perangkat</th>
                                     <th>Update</th>
                                 </tr>
                             </thead>
@@ -88,10 +80,14 @@
                                         <span style="font-weight: 600;">{{ $item['persen'] }}%</span>
                                     </td>
                                     <td>
-                                        @if($item['bau'] >= 400)
-                                            <span class="bau-bahaya">{{ $item['bau'] }} PPM (Berbau)</span>
+                                        @if($item['bau'] >= 800)
+                                            <span class="bau-bahaya">
+                                                <i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat ({{ $item['bau'] }} PPM)
+                                            </span>
                                         @else
-                                            <span class="bau-normal">{{ $item['bau'] }} PPM</span>
+                                            <span class="bau-normal">
+                                                <i class="fa-solid fa-circle-check"></i> Aman ({{ $item['bau'] }} PPM)
+                                            </span>
                                         @endif
                                     </td>
                                     <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>

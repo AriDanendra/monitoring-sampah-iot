@@ -26,16 +26,6 @@
                     <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
                 </a>
             </li>
-            <li class="{{ request()->is('pengaturan') ? 'active' : '' }}">
-                <a href="{{ route('pengaturan') }}">
-                    <i class="fa-solid fa-gear"></i> Pengaturan
-                </a>
-            </li>
-            <li style="margin-top: 20px;">
-                <a href="{{ route('logout') }}" style="color: #ef4444;" onclick="return confirm('Apakah Anda yakin ingin keluar?')">
-                    <i class="fa-solid fa-right-from-bracket"></i> Keluar
-                </a>
-            </li>
-        </ul>
+            </ul>
     </nav>
 </aside>

@@ -52,20 +52,24 @@ class DashboardController extends Controller
 
         // --- LOGIKA OTOMATISASI PENYIMPANAN RIWAYAT ---
         $cacheKey = "status_penuh_" . str_replace('#', '', $idTag);
-        $wasFull = Cache::get($cacheKey, false);
+        $wasFullOrSmelly = Cache::get($cacheKey, false);
 
-        if ($currentPersen >= 80) {
+        // 1. Jika sampah terdeteksi Penuh (>= 80%) ATAU Bau Nyengat (>= 800), tandai di sistem
+        if ($currentPersen >= 80 || $currentBau >= 800) {
             Cache::put($cacheKey, true, now()->addDays(7));
         } 
 
-        if ($wasFull && $currentPersen < 10) {
+        // 2. Jika sebelumnya ditandai perlu diangkut DAN sekarang sudah kosong (< 10%)
+        if ($wasFullOrSmelly && $currentPersen < 10) {
             History::create([
                 'device_id' => $idTag,
                 'lokasi' => $lokasi,
-                'kapasitas_terakhir' => 100, 
+                'kapasitas_terakhir' => 100, // Asumsi diangkut saat mencapai batas
                 'kadar_bau_terakhir' => $currentBau,
                 'waktu_pengangkutan' => now(),
             ]);
+            
+            // Hapus tanda di cache karena sudah selesai diangkut
             Cache::forget($cacheKey);
         }
         // ----------------------------------------------
@@ -126,7 +130,12 @@ class DashboardController extends Controller
     {
         $devices = $this->getDeviceData();
         $totalLokasi = count($devices);
-        $titikPenuh = collect($devices)->where('persen', '>=', 80)->count();
+        
+        // Menghitung titik yang perlu diangkut (Penuh >= 80 atau Bau Nyengat >= 800)
+        $titikPenuh = collect($devices)->filter(function ($item) {
+            return $item['persen'] >= 80 || (isset($item['bau']) && $item['bau'] >= 800);
+        })->count();
+
         $perangkatAktif = collect($devices)->where('status', 'online')->count();
 
         return view('dashboard', compact('devices', 'totalLokasi', 'titikPenuh', 'perangkatAktif'));
@@ -166,14 +175,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    // --- FITUR BARU: HAPUS SATU DATA RIWAYAT ---
     public function hapusRiwayat($id)
     {
         History::destroy($id);
         return redirect()->back()->with('success', 'Data riwayat berhasil dihapus.');
     }
 
-    // --- FITUR BARU: KOSONGKAN SEMUA RIWAYAT ---
     public function hapusSemuaRiwayat()
     {
         History::truncate();

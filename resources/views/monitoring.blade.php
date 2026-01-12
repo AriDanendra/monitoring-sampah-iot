@@ -116,7 +116,7 @@
         
         .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .badge-full { background: #fee2e2; color: #ef4444; }
-        .badge-smell { background: #fef3c7; color: #d97706; }
+        .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
 
         .leaflet-routing-container { display: none; }
     </style>
@@ -166,9 +166,14 @@
                                     
                                     @if($item['persen'] >= 80)
                                         <span class="badge-status badge-full">Penuh</span>
-                                    @elseif(isset($item['bau']) && $item['bau'] >= 400)
-                                        <span class="badge-status badge-smell">Berbau</span>
-                                    @else
+                                    @endif
+
+                                    @if($item['bau'] >= 800)
+                                        <span class="badge-status badge-extreme">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Bau Nyengat
+                                        </span>
+                                    @elseif($item['persen'] < 80)
+                                        {{-- Badge Aman hanya muncul jika bak TIDAK penuh dan bau < 800 --}}
                                         <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>
                                     @endif
 
@@ -196,7 +201,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         const iconKantor = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/167/167707.png',
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3299/3299935.png',
             iconSize: [40, 40]
         });
         L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
@@ -229,7 +234,11 @@
         }
 
         function urutkanDenganNearestNeighbour() {
-            let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 400)); 
+            // Hanya Penuh (>=80%) atau Bau Nyengat (>=800 PPM) yang memicu rute
+            let unvisited = dataDevices.filter(d => 
+                d.persen >= 80 || (d.bau && d.bau >= 800)
+            ); 
+            
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
