@@ -100,22 +100,12 @@
                             </thead>
                             <tbody>
                                 @foreach($devices as $item)
-                                @php
-                                    // Warna bar otomatis sesuai persentase
-                                    $colorClass = 'emerald';
-                                    if ($item['persen'] >= 80) $colorClass = 'red';
-                                    elseif ($item['persen'] >= 40) $colorClass = 'orange';
-                                @endphp
                                 <tr>
                                     <td>{{ $item['id'] }}</td>
                                     <td><strong>{{ $item['lokasi'] }}</strong></td>
                                     <td>
-                                        <div class="progress-container">
-                                            <div class="progress-track">
-                                                <div class="progress-fill {{ $colorClass }}" style="width: {{ $item['persen'] }}%"></div>
-                                            </div>
-                                            <span>{{ $item['persen'] }}%</span>
-                                        </div>
+                                        {{-- Progress fill dan track dihapus, hanya menyisakan teks angka --}}
+                                        <span style="font-weight: 600;">{{ $item['persen'] }}%</span>
                                     </td>
                                     <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                                     <td>{{ $item['update'] }}</td>
