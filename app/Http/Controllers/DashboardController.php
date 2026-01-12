@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Models\History; // Pastikan model History sudah dibuat
+use App\Models\History;
 
 class DashboardController extends Controller
 {
@@ -46,7 +46,30 @@ class DashboardController extends Controller
     {
         $telemetry = $this->getDeviceTelemetry($deviceId);
         
+        $currentPersen = isset($telemetry['persen']) ? (int)$telemetry['persen'][0]['value'] : 0;
+        $currentBau = isset($telemetry['bau']) ? (int)$telemetry['bau'][0]['value'] : 0;
         $lastTs = isset($telemetry['persen']) ? $telemetry['persen'][0]['ts'] : null;
+
+        // --- LOGIKA OTOMATISASI PENYIMPANAN RIWAYAT ---
+        $cacheKey = "status_penuh_" . str_replace('#', '', $idTag);
+        $wasFull = Cache::get($cacheKey, false);
+
+        if ($currentPersen >= 80) {
+            Cache::put($cacheKey, true, now()->addDays(7));
+        } 
+
+        if ($wasFull && $currentPersen < 10) {
+            History::create([
+                'device_id' => $idTag,
+                'lokasi' => $lokasi,
+                'kapasitas_terakhir' => 100, 
+                'kadar_bau_terakhir' => $currentBau,
+                'waktu_pengangkutan' => now(),
+            ]);
+            Cache::forget($cacheKey);
+        }
+        // ----------------------------------------------
+
         $status = 'offline';
         $update = 'Tidak ada data';
 
@@ -72,8 +95,8 @@ class DashboardController extends Controller
         return [
             'id' => $idTag,
             'lokasi' => $lokasi,
-            'persen' => isset($telemetry['persen']) ? (int)$telemetry['persen'][0]['value'] : 0,
-            'bau' => isset($telemetry['bau']) ? (int)$telemetry['bau'][0]['value'] : 0,
+            'persen' => $currentPersen,
+            'bau' => $currentBau,
             'status' => $status,
             'update' => $update,
             'lat' => $lat,
@@ -121,14 +144,12 @@ class DashboardController extends Controller
         return view('monitoring', compact('devices', 'kantor'));
     }
 
-    // --- 2. FITUR BARU: HALAMAN RIWAYAT ---
     public function riwayat()
     {
         $logs = History::orderBy('waktu_pengangkutan', 'desc')->get();
         return view('riwayat', compact('logs'));
     }
 
-    // --- 3. FITUR BARU: SIMPAN LOG KE DATABASE (AJAX Compatible) ---
     public function simpanLog(Request $request)
     {
         History::create([
@@ -139,10 +160,23 @@ class DashboardController extends Controller
             'waktu_pengangkutan' => now(),
         ]);
 
-        // Mengembalikan JSON agar tidak terjadi error "Unexpected token <" di JavaScript
         return response()->json([
             'success' => true,
             'message' => 'Riwayat pengangkutan berhasil dicatat.'
         ]);
+    }
+
+    // --- FITUR BARU: HAPUS SATU DATA RIWAYAT ---
+    public function hapusRiwayat($id)
+    {
+        History::destroy($id);
+        return redirect()->back()->with('success', 'Data riwayat berhasil dihapus.');
+    }
+
+    // --- FITUR BARU: KOSONGKAN SEMUA RIWAYAT ---
+    public function hapusSemuaRiwayat()
+    {
+        History::truncate();
+        return redirect()->back()->with('success', 'Semua data riwayat telah dikosongkan.');
     }
 }

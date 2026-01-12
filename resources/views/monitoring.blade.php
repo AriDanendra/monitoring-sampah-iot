@@ -164,18 +164,15 @@
                                 </div>
                                 <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                                     
-                                    @if($item['persen'] >= 80 || (isset($item['bau']) && $item['bau'] >= 400))
-                                        <button onclick="konfirmasiSelesai('{{ $item['id'] }}', '{{ $item['lokasi'] }}', {{ $item['persen'] }}, {{ $item['bau'] }})" 
-                                                style="background: #6366f1; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600;">
-                                            Selesai Angkut
-                                        </button>
+                                    @if($item['persen'] >= 80)
+                                        <span class="badge-status badge-full">Penuh</span>
+                                    @elseif(isset($item['bau']) && $item['bau'] >= 400)
+                                        <span class="badge-status badge-smell">Berbau</span>
                                     @else
                                         <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>
                                     @endif
-                                    
-                                    @if(isset($item['bau']) && $item['bau'] >= 400)
-                                        <span class="badge-status badge-smell">Berbau</span>
-                                    @endif
+
+                                    <small style="font-size: 10px; color: #94a3b8;">{{ $item['update'] }}</small>
                                 </div>
                             </div>
                             @endforeach
@@ -303,52 +300,6 @@
 
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
-        }
-
-        function konfirmasiSelesai(id, lokasi, persen, bau) {
-            Swal.fire({
-                title: 'Konfirmasi Selesai',
-                text: "Apakah sampah di " + lokasi + " sudah selesai diangkut?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#22c55e',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Simpan ke Riwayat',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch("{{ route('simpan-log') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                        },
-                        body: JSON.stringify({ id, lokasi, persen, bau })
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Gagal menghubungi server');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if(data.success) {
-                            Swal.fire({
-                                title: 'Berhasil!',
-                                text: 'Data pengangkutan telah dicatat di riwayat.',
-                                icon: 'success',
-                                confirmButtonColor: '#6366f1'
-                            }).then(() => {
-                                window.location.reload(); // Refresh manual hanya setelah data tersimpan
-                            });
-                        } else {
-                            Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'Gagal terhubung ke server. Cek koneksi Anda.', 'error');
-                    });
-                }
-            })
         }
     </script>
 </body>
