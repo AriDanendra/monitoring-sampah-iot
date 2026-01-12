@@ -11,10 +11,7 @@ Route::get('/', function () {
 // Halaman Dashboard menggunakan Controller
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Halaman lainnya (masih statis)
-Route::get('/monitoring', function () {
-    return view('monitoring');
-})->name('monitoring');
+Route::get('/monitoring', [DashboardController::class, 'monitoring'])->name('monitoring');
 
 Route::get('/riwayat', function () {
     return "Halaman Riwayat - Sedang dalam pengembangan";
