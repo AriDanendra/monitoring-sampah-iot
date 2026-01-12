@@ -38,10 +38,14 @@
 
         /* Tampilan Timeline Navigasi */
         .timeline-container { border-left: 3px solid #6366f1; margin-left: 10px; padding-left: 20px; position: relative; margin-top: 10px; }
-        .step-card { background: #f8fafc; border-radius: 8px; padding: 10px; margin-bottom: 15px; position: relative; border: 1px solid #e2e8f0; }
+        .step-card { 
+            background: #f8fafc; border-radius: 8px; padding: 10px; margin-bottom: 15px; 
+            position: relative; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;
+        }
+        .step-card:hover { background: #eef2ff; border-color: #6366f1; }
         .step-card::before { content: ''; position: absolute; left: -27px; top: 12px; width: 12px; height: 12px; background: #6366f1; border-radius: 50%; border: 3px solid white; }
         .step-destination { font-weight: 700; color: #1e293b; display: block; font-size: 14px; }
-        .step-details { font-size: 12px; color: #64748b; line-height: 1.5; }
+        .step-details { font-size: 11px; color: #6366f1; font-weight: 500; }
 
         /* Sembunyikan panel bawaan Leaflet agar rapi */
         .leaflet-routing-container { display: none; }
@@ -55,7 +59,7 @@
             <header class="top-header">
                 <div class="header-left">
                     <h1>Monitoring & Rute Optimal</h1>
-                    <p>Navigasi efisien dari kantor pusat ke titik penjemputan.</p>
+                    <p>Klik urutan lokasi untuk melihat rute per segmen.</p>
                 </div>
             </header>
 
@@ -70,7 +74,7 @@
                             <i class="fa-solid fa-map-location-dot"></i> Urutan Penjemputan
                         </h3>
                         <div id="instruction-steps" class="timeline-container">
-                            </div>
+                        </div>
                     </div>
                     
                     <div class="list-container">
@@ -103,59 +107,63 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // Registrasi Bahasa Indonesia untuk Navigasi
-        L.Routing.Localization['id'] = {
-            directions: { North: 'Utara', Northeast: 'Timur Laut', East: 'Timur', Southeast: 'Tenggara', South: 'Selatan', Southwest: 'Barat Daya', West: 'Barat', Northwest: 'Barat Laut' },
-            instructions: {
-                Head: ['Kepala {dir}', 'di {road}'], SlightRight: ['Serong kanan', 'di {road}'], Right: ['Belok kanan', 'di {road}'], SharpRight: ['Belok tajam kanan', 'di {road}'],
-                SlightLeft: ['Serong kiri', 'di {road}'], Left: ['Belok kiri', 'di {road}'], SharpLeft: ['Belok tajam kiri', 'di {road}'], Straight: ['Lurus', 'di {road}'],
-                DestinationReached: 'Sampai di tujuan', WayPointReached: 'Sampai di titik transit', Roundabout: ['Masuk bundaran', 'di {road}'], TurnAround: 'Putar balik'
-            },
-            formatOrder: function(n) { return n; },
-            ui: { startPlaceholder: 'Awal', viaPlaceholder: 'Via', endPlaceholder: 'Tujuan' }
-        };
-
+        // Data dari Controller
         const dataKantor = {!! json_encode($kantor) !!};
         const dataDevices = {!! json_encode($devices) !!};
 
+        // Inisialisasi Map
         const map = L.map('map').setView([dataKantor.lat, dataKantor.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Marker Kantor Pusat (Depot)
+        // Marker Kantor
         const iconKantor = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/167/167707.png',
             iconSize: [40, 40]
         });
-        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor})
-            .addTo(map)
-            .bindPopup("<b>Kantor Pusat (Mulai/Selesai)</b>");
+        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("Kantor Pusat");
 
         // Marker Lokasi Sampah
         dataDevices.forEach(d => {
-            let statusText = (d.bau && d.bau >= 400) ? "<br><span style='color:orange'>Status: Berbau</span>" : "";
-            L.marker([d.lat, d.lng])
-                .addTo(map)
-                .bindPopup(`<b>${d.id}</b><br>${d.lokasi}<br>Kapasitas: ${d.persen}%${statusText}`);
+            L.marker([d.lat, d.lng]).addTo(map).bindPopup(`<b>${d.id}</b><br>${d.lokasi}`);
         });
 
         let routingControl = null;
 
+        // Fungsi untuk fokus ke titik tertentu
+        function fokusKeTitik(lat, lng) {
+            map.flyTo([lat, lng], 17);
+        }
+
+        // Fungsi untuk menampilkan satu rute segmen (A ke B)
+        function tampilkanRuteSegmen(lat1, lng1, lat2, lng2) {
+            if (routingControl) map.removeControl(routingControl);
+
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(lat1, lng1),
+                    L.latLng(lat2, lng2)
+                ],
+                createMarker: function() { return null; },
+                lineOptions: { styles: [{ color: '#6366f1', weight: 6 }] }
+            }).addTo(map);
+            
+            const bounds = L.latLngBounds([ [lat1, lng1], [lat2, lng2] ]);
+            map.fitBounds(bounds.pad(0.5));
+        }
+
+        // Hitung Jarak sederhana
         function hitungJarak(p1, p2) {
             return Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2));
         }
 
-        // Algoritma Nearest Neighbour Sesuai Metodologi
+        // Algoritma Urutan
         function urutkanDenganNearestNeighbour() {
-            // Filter: Hanya lokasi penuh (>=80%) atau berbau (>=400ppm)
             let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 400)); 
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
-            let ruteTerurut = [L.latLng(dataKantor.lat, dataKantor.lng)];
+            let ruteTerurut = [ {nama: "Kantor Pusat (Mulai)", lat: dataKantor.lat, lng: dataKantor.lng} ];
 
             if (unvisited.length === 0) {
-                alert("Tidak ada lokasi yang perlu diangkut saat ini.");
+                alert("Tidak ada lokasi yang perlu diangkut.");
                 return null;
             }
 
@@ -171,70 +179,59 @@
                     }
                 }
 
-                let titikTerdekat = unvisited.splice(indexTerdekat, 1)[0];
-                ruteTerurut.push(L.latLng(titikTerdekat.lat, titikTerdekat.lng));
-                currentPos = { lat: titikTerdekat.lat, lng: titikTerdekat.lng }; 
+                let titik = unvisited.splice(indexTerdekat, 1)[0];
+                ruteTerurut.push({nama: titik.lokasi, lat: titik.lat, lng: titik.lng});
+                currentPos = { lat: titik.lat, lng: titik.lng }; 
             }
 
-            ruteTerurut.push(L.latLng(dataKantor.lat, dataKantor.lng)); // Kembali ke Depot
+            ruteTerurut.push({nama: "Kantor Pusat (Selesai)", lat: dataKantor.lat, lng: dataKantor.lng});
             return ruteTerurut;
         }
 
+        // Tampilkan urutan di panel samping
         function buatRuteKeliling() {
-            if (routingControl) map.removeControl(routingControl);
-
-            let waypoints = urutkanDenganNearestNeighbour();
-            if (!waypoints) return;
+            const waypointsData = urutkanDenganNearestNeighbour();
+            if (!waypointsData) return;
 
             document.getElementById('navigation-summary').style.display = 'block';
             const instructionContainer = document.getElementById('instruction-steps');
-            instructionContainer.innerHTML = '<p style="font-size:12px;">Menghitung rute optimal...</p>';
+            instructionContainer.innerHTML = '';
 
+            // Render Timeline
+            waypointsData.forEach((point, i) => {
+                let card = document.createElement('div');
+                card.className = 'step-card';
+                
+                let detailText = (i === 0) ? "Titik Keberangkatan" : "Klik untuk lihat rute ke sini";
+                if (i === waypointsData.length - 1) detailText = "Titik Akhir (Depot)";
+
+                card.innerHTML = `
+                    <span class="step-destination">${point.nama}</span>
+                    <span class="step-details">${detailText}</span>
+                `;
+
+                // Event klik untuk rute segmen
+                if (i > 0) {
+                    card.onclick = () => {
+                        const prev = waypointsData[i-1];
+                        tampilkanRuteSegmen(prev.lat, prev.lng, point.lat, point.lng);
+                    };
+                } else {
+                    card.onclick = () => fokusKeTitik(point.lat, point.lng);
+                }
+
+                instructionContainer.appendChild(card);
+            });
+
+            // Tampilkan rute penuh di awal
+            if (routingControl) map.removeControl(routingControl);
             routingControl = L.Routing.control({
-                waypoints: waypoints,
-                language: 'id',
-                routeWhileDragging: false,
-                addWaypoints: false,
+                waypoints: waypointsData.map(p => L.latLng(p.lat, p.lng)),
                 createMarker: function() { return null; }
             }).addTo(map);
 
-            // Olah instruksi menjadi tampilan Timeline tanpa jarak dan waktu
-            routingControl.on('routesfound', function(e) {
-                const routes = e.routes[0];
-                const instructions = routes.instructions;
-                instructionContainer.innerHTML = '';
-                let waypointCount = 0;
-
-                instructions.forEach((instr, i) => {
-                    // Hanya tampilkan langkah saat mencapai titik lokasi
-                    if (instr.type === 'WaypointReached' || i === 0 || i === instructions.length - 1) {
-                        let latLng = waypoints[waypointCount];
-                        let locationName = "Titik Penjemputan";
-
-                        if (waypointCount === 0) locationName = "Kantor Pusat (Mulai)";
-                        else if (waypointCount === waypoints.length - 1) locationName = "Kantor Pusat (Selesai)";
-                        else {
-                            let device = dataDevices.find(d => Math.abs(d.lat - latLng.lat) < 0.0001);
-                            locationName = device ? device.lokasi : "Lokasi Sampah";
-                        }
-
-                        let card = document.createElement('div');
-                        card.className = 'step-card';
-                        // Bagian ini telah dimodifikasi untuk hanya menampilkan nama lokasi saja
-                        card.innerHTML = `<span class="step-destination">${locationName}</span>`;
-                        
-                        instructionContainer.appendChild(card);
-                        waypointCount++;
-                    }
-                });
-            });
-
-            const bounds = L.latLngBounds(waypoints);
+            const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
-        }
-
-        function fokusKeTitik(lat, lng) {
-            map.flyTo([lat, lng], 17);
         }
     </script>
 </body>
