@@ -26,6 +26,7 @@ body {
     min-height: 100vh;
 }
 
+/* --- SIDEBAR AREA --- */
 .sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -39,10 +40,40 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary-dark);
     margin-bottom: 40px;
+}
+
+/* Pengaturan Teks Judul Bertumpuk */
+.header-text-group {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.brand-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+}
+
+.brand-sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.iot-tag {
+    font-weight: 400;
+    background: #ecfdf5;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 9px;
+    margin-left: 2px;
+    border: 1px solid #dcfce7;
+    color: var(--primary-dark);
 }
 
 .logo-box {
@@ -54,8 +85,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; /* Agar logo tidak gepeng */
 }
 
+/* --- NAVIGATION --- */
 .sidebar-nav ul {
     list-style: none;
 }
@@ -83,6 +116,7 @@ body {
     color: var(--primary);
 }
 
+/* --- MAIN CONTENT & TABLES --- */
 .main-content {
     flex: 1;
     padding: 30px 40px;
