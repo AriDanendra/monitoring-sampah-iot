@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Smart Waste IoT</title>
-    
+    <title>Dashboard - Smart Waste System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('style.css') }}">
@@ -16,16 +15,16 @@
                 <div class="logo-box">
                     <i class="fa-solid fa-leaf"></i>
                 </div>
-                <span>SmartTrash <small>Parepare</small></span>
+                <span>SmartWaste <small style="font-weight: 400; opacity: 0.7;">IoT</small></span>
             </div>
             
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="#"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-                    <li><a href="#"><i class="fa-solid fa-map-location-dot"></i> Status Lokasi</a></li>
-                    <li><a href="#"><i class="fa-solid fa-clock-rotate-left"></i> Histori</a></li>
-                    <li class="nav-divider"></li>
-                    <li><a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                    <li class="active"><a href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fa-solid fa-map-location-dot"></i> Monitoring</a></li>
+                    <li><a href="#"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
+                    <li><a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a></li>
+                    <li style="margin-top: 20px;"><a href="#" style="color: #ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a></li>
                 </ul>
             </nav>
         </aside>
@@ -33,19 +32,15 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="header-left">
-                    <h1>Ringkasan Sistem</h1>
-                    <p>Selamat datang kembali, Pengelola Kebersihan.</p>
+                    <h1>Statistik Utama</h1>
+                    <p>Pantau volume sampah dan kualitas udara secara real-time.</p>
                 </div>
                 <div class="header-right">
-                    <div class="notification-bell">
-                        <i class="fa-regular fa-bell"></i>
-                        <span class="dot"></span>
-                    </div>
                     <div class="profile-chip">
-                        <img src="{{ asset('user-icon.png') }}" alt="User">
+                        <img src="{{ asset('user-icon.png') }}" alt="Admin">
                         <div class="profile-info">
                             <span class="name">Ari Danendra</span>
-                            <span class="role">Admin</span>
+                            <span class="role">Administrator</span>
                         </div>
                     </div>
                 </div>
@@ -55,72 +50,97 @@
                 <div class="stats-grid">
                     <div class="stat-card blue">
                         <div class="stat-content">
+                            <span class="stat-label">Volume Sampah</span>
+                            <h2 class="stat-value">85%</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </div>
+                    </div>
+
+                    <div class="stat-card orange">
+                        <div class="stat-content">
+                            <span class="stat-label">Kadar Gas/Bau</span>
+                            <h2 class="stat-value">Normal</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                    </div>
+
+                    <div class="stat-card pink">
+                        <div class="stat-content">
                             <span class="stat-label">Total Lokasi</span>
-                            <h2 class="stat-value">4 <small>Titik</small></h2>
+                            <h2 class="stat-value">12</h2>
                         </div>
                         <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-location-arrow"></i>
+                            <i class="fa-solid fa-location-dot"></i>
                         </div>
                     </div>
 
-                    <div class="stat-card red">
+                    <div class="stat-card green">
                         <div class="stat-content">
-                            <span class="stat-label">Titik Penuh</span>
-                            <h2 class="stat-value">1 <small>Lokasi</small></h2>
+                            <span class="stat-label">Perangkat Aktif</span>
+                            <h2 class="stat-value">10</h2>
                         </div>
                         <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-dumpster"></i>
-                        </div>
-                    </div>
-
-                    <div class="stat-card yellow">
-                        <div class="stat-content">
-                            <span class="stat-label">ESP32 Aktif</span>
-                            <h2 class="stat-value">2 <small>/ 4 Perangkat</small></h2>
-                        </div>
-                        <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-bolt"></i>
+                            <i class="fa-solid fa-microchip"></i>
                         </div>
                     </div>
                 </div>
 
                 <div class="data-section">
                     <div class="section-header">
-                        <h3>Status Real-Time Sensor</h3>
-                        <button class="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                        <h3>Status Detail Perangkat</h3>
+                        <button class="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
                     </div>
-                    <div class="table-card">
+                    <div class="table-responsive">
                         <table class="modern-table">
                             <thead>
                                 <tr>
-                                    <th>No.</th>
-                                    <th>Titik Lokasi</th>
-                                    <th>Kapasitas Sampah</th>
-                                    <th>Sinyal Perangkat</th>
-                                    <th>Update Terakhir</th>
+                                    <th>ID</th>
+                                    <th>Lokasi</th>
+                                    <th>Kapasitas</th>
+                                    <th>Status</th>
+                                    <th>Update</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>01</td>
-                                    <td><strong>Lokasi A</strong> (Jl. Bau Massepe)</td>
-                                    <td><div class="progress-container"><div class="progress-bar red" style="width: 95%"></div><span>95%</span></div></td>
+                                    <td>#TR-01</td>
+                                    <td><strong>Jl. Bau Massepe</strong></td>
+                                    <td>
+                                        <div class="progress-container">
+                                            <div class="progress-track"><div class="progress-fill red" style="width: 95%"></div></div>
+                                            <span>95%</span>
+                                        </div>
+                                    </td>
                                     <td><span class="status-badge online">Online</span></td>
-                                    <td>10 Detik Lalu</td>
+                                    <td>Sekarang</td>
                                 </tr>
                                 <tr>
-                                    <td>02</td>
-                                    <td><strong>Lokasi B</strong> (Soreang)</td>
-                                    <td><div class="progress-container"><div class="progress-bar orange" style="width: 50%"></div><span>50%</span></div></td>
+                                    <td>#TR-02</td>
+                                    <td><strong>Soreang</strong></td>
+                                    <td>
+                                        <div class="progress-container">
+                                            <div class="progress-track"><div class="progress-fill orange" style="width: 50%"></div></div>
+                                            <span>50%</span>
+                                        </div>
+                                    </td>
                                     <td><span class="status-badge online">Online</span></td>
-                                    <td>2 Menit Lalu</td>
+                                    <td>2 Menit lalu</td>
                                 </tr>
                                 <tr>
-                                    <td>03</td>
-                                    <td><strong>Lokasi C</strong> (Ujung)</td>
-                                    <td><div class="progress-container"><div class="progress-bar grey" style="width: 5%"></div><span>5%</span></div></td>
+                                    <td>#TR-03</td>
+                                    <td><strong>Ujung</strong></td>
+                                    <td>
+                                        <div class="progress-container">
+                                            <div class="progress-track"><div class="progress-fill emerald" style="width: 10%"></div></div>
+                                            <span>10%</span>
+                                        </div>
+                                    </td>
                                     <td><span class="status-badge offline">Offline</span></td>
-                                    <td>2 Jam Lalu</td>
+                                    <td>1 Jam lalu</td>
                                 </tr>
                             </tbody>
                         </table>
