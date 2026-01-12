@@ -120,7 +120,7 @@
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/167/167707.png',
             iconSize: [40, 40]
         });
-        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("Kantor Pusat");
+        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
 
         // Marker Lokasi Sampah
         dataDevices.forEach(d => {
@@ -160,7 +160,7 @@
         function urutkanDenganNearestNeighbour() {
             let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 400)); 
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
-            let ruteTerurut = [ {nama: "Kantor Pusat (Mulai)", lat: dataKantor.lat, lng: dataKantor.lng} ];
+            let ruteTerurut = [ {nama: "TPS (Mulai)", lat: dataKantor.lat, lng: dataKantor.lng} ];
 
             if (unvisited.length === 0) {
                 alert("Tidak ada lokasi yang perlu diangkut.");
@@ -184,7 +184,7 @@
                 currentPos = { lat: titik.lat, lng: titik.lng }; 
             }
 
-            ruteTerurut.push({nama: "Kantor Pusat (Selesai)", lat: dataKantor.lat, lng: dataKantor.lng});
+            ruteTerurut.push({nama: "TPS (Selesai)", lat: dataKantor.lat, lng: dataKantor.lng});
             return ruteTerurut;
         }
 

@@ -58,7 +58,7 @@ class DashboardController extends Controller
         $devices = $this->getDeviceData();
         
         $kantor = [
-            'nama' => 'Kantor Pusat', 
+            'nama' => 'TPS', 
             'lat' => -3.988430338950498, 
             'lng' => 119.65216109576326
         ];
