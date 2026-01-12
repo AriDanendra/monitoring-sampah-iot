@@ -1,34 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController; // Pastikan ini di-import
 
 // Halaman utama
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Halaman Dashboard
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+// Halaman Dashboard menggunakan Controller
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Halaman Monitoring
+// Halaman lainnya (masih statis)
 Route::get('/monitoring', function () {
     return view('monitoring');
 })->name('monitoring');
 
-// Halaman Riwayat
 Route::get('/riwayat', function () {
-    return "Halaman Riwayat - Sedang dalam pengembangan"; // Nantinya ganti dengan view('riwayat')
+    return "Halaman Riwayat - Sedang dalam pengembangan";
 })->name('riwayat');
 
-// Halaman Pengaturan
 Route::get('/pengaturan', function () {
-    return "Halaman Pengaturan - Sedang dalam pengembangan"; // Nantinya ganti dengan view('pengaturan')
+    return "Halaman Pengaturan - Sedang dalam pengembangan";
 })->name('pengaturan');
 
-// Fungsi Logout
 Route::get('/logout', function () {
-    // Tambahkan logika logout di sini jika sudah menggunakan sistem login
     return redirect('/')->with('success', 'Berhasil keluar');
 })->name('logout');

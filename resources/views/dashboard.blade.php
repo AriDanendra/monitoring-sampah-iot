@@ -9,17 +9,6 @@
     <link rel="stylesheet" href="{{ asset('style.css') }}">
 </head>
 <body>
-    @php
-        // Data simulasi
-        $devices = [
-            ['id' => '#TR-01', 'lokasi' => 'Jl. Bau Massepe', 'persen' => 95, 'status' => 'online', 'update' => 'Sekarang'],
-            ['id' => '#TR-02', 'lokasi' => 'Soreang', 'persen' => 50, 'status' => 'online', 'update' => '2 Menit lalu'],
-            ['id' => '#TR-03', 'lokasi' => 'Ujung', 'persen' => 10, 'status' => 'offline', 'update' => '1 Jam lalu'],
-        ];
-
-        $titikPenuh = collect($devices)->where('persen', '>=', 80)->count();
-    @endphp
-
     <div class="dashboard-wrapper">
         @include('partials.sidebar')
 
@@ -45,7 +34,7 @@
                     <div class="stat-card pink">
                         <div class="stat-content">
                             <span class="stat-label">Total Lokasi Terpantau</span>
-                            <h2 class="stat-value">{{ count($devices) }}</h2>
+                            <h2 class="stat-value">{{ $totalLokasi }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-location-dot"></i></div>
                     </div>
@@ -61,7 +50,7 @@
                     <div class="stat-card green">
                         <div class="stat-content">
                             <span class="stat-label">Perangkat Aktif</span>
-                            <h2 class="stat-value">10</h2>
+                            <h2 class="stat-value">{{ $perangkatAktif }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-microchip"></i></div>
                     </div>
