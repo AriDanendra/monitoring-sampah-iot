@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Models\History; // 1. TAMBAHKAN INI
 
 class DashboardController extends Controller
 {
@@ -41,9 +42,6 @@ class DashboardController extends Controller
         return $response->json();
     }
 
-    /**
-     * Fungsi Helper untuk memproses data mentah ThingsBoard menjadi format Dashboard
-     */
     private function formatDeviceData($deviceId, $idTag, $lokasi, $lat, $lng)
     {
         $telemetry = $this->getDeviceTelemetry($deviceId);
@@ -86,13 +84,8 @@ class DashboardController extends Controller
     private function getDeviceData()
     {
         return [
-            // TR-01 (Dynamic)
             $this->formatDeviceData($this->deviceIdTR01, '#TR-01', 'Grand Sulawesi Parepare', -4.006904852098234, 119.66253093102463),
-            
-            // TR-02 (Sekarang juga Dynamic)
             $this->formatDeviceData($this->deviceIdTR02, '#TR-02', 'Perumahan Pare Town House', -4.010893730077395, 119.63298928262212),
-            
-            // TR-03 (Masih Hardcoded / Manual)
             [
                 'id' => '#TR-03', 
                 'lokasi' => 'Perumahan Bukit Harapan Indah', 
@@ -126,5 +119,26 @@ class DashboardController extends Controller
         ];
 
         return view('monitoring', compact('devices', 'kantor'));
+    }
+
+    // --- 2. FITUR BARU: HALAMAN RIWAYAT ---
+    public function riwayat()
+    {
+        $logs = History::orderBy('waktu_pengangkutan', 'desc')->get();
+        return view('riwayat', compact('logs'));
+    }
+
+    // --- 3. FITUR BARU: SIMPAN LOG KE DATABASE ---
+    public function simpanLog(Request $request)
+    {
+        History::create([
+            'device_id' => $request->id,
+            'lokasi' => $request->lokasi,
+            'kapasitas_terakhir' => $request->persen,
+            'kadar_bau_terakhir' => $request->bau,
+            'waktu_pengangkutan' => now(),
+        ]);
+
+        return back()->with('success', 'Riwayat pengangkutan berhasil dicatat.');
     }
 }

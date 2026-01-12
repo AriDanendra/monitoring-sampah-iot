@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Layout Dasar Dashboard */
         body, html { height: 100%; margin: 0; overflow: hidden; } 
@@ -78,7 +80,7 @@
 
         .section-title { font-size: 15px; margin: 25px 0 15px; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- Timeline Pickup Sequence (Rapi) --- */
+        /* --- Timeline Pickup Sequence --- */
         .timeline-container { border-left: 2px dashed #cbd5e1; margin-left: 15px; padding-left: 25px; position: relative; }
         
         .step-card { 
@@ -88,7 +90,6 @@
         }
         .step-card:hover { border-color: #6366f1; background: #f8faff; transform: translateX(5px); }
 
-        /* Dot Penomoran */
         .step-card::before { 
             content: attr(data-step); 
             position: absolute; left: -36px; top: 12px; 
@@ -103,14 +104,13 @@
         .step-destination { font-weight: 700; color: #1e293b; font-size: 13.5px; display: block; margin-bottom: 2px; }
         .step-details { font-size: 11px; color: #6366f1; font-weight: 500; display: flex; align-items: center; gap: 4px; }
 
-        /* Warna Khusus Start/End */
         .step-card.start::before { background: #22c55e; }
         .step-card.end::before { background: #ef4444; }
 
         /* List Lokasi */
         .location-card { 
             padding: 12px; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; 
-            cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
         }
         .location-card:hover { background: #f8fafc; border-color: #6366f1; }
         
@@ -118,7 +118,7 @@
         .badge-full { background: #fee2e2; color: #ef4444; }
         .badge-smell { background: #fef3c7; color: #d97706; }
 
-        .leaflet-routing-container { display: none; }
+        .leaflet-routing-machine-container { display: none; }
     </style>
 </head>
 <body>
@@ -157,15 +157,21 @@
                                 <i class="fa-solid fa-hospital-user"></i> Status Titik Bak Sampah
                             </h3>
                             @foreach($devices as $item)
-                            <div class="location-card" onclick="fokusKeTitik({{ $item['lat'] }}, {{ $item['lng'] }})">
-                                <div>
+                            <div class="location-card">
+                                <div onclick="fokusKeTitik({{ $item['lat'] }}, {{ $item['lng'] }})" style="flex: 1; cursor: pointer;">
                                     <span style="font-weight: 700; color: #1e293b;">{{ $item['id'] }}</span><br>
                                     <small style="color: #64748b;">{{ $item['lokasi'] }}</small>
                                 </div>
-                                <div style="text-align: right;">
+                                <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                                     @if($item['persen'] >= 80)
-                                        <span class="badge-status badge-full">Penuh</span>
+                                        <button onclick="konfirmasiSelesai('{{ $item['id'] }}', '{{ $item['lokasi'] }}', {{ $item['persen'] }}, {{ $item['bau'] }})" 
+                                                style="background: #6366f1; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600;">
+                                            Selesai Angkut
+                                        </button>
+                                    @else
+                                        <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>
                                     @endif
+                                    
                                     @if(isset($item['bau']) && $item['bau'] >= 400)
                                         <span class="badge-status badge-smell">Berbau</span>
                                     @endif
@@ -230,7 +236,13 @@
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
             if (unvisited.length === 0) {
-                alert("Semua bak sampah masih di bawah ambang batas.");
+                Swal.fire({
+                    title: 'Status Aman',
+                    text: 'Semua bak sampah masih di bawah ambang batas penjemputan.',
+                    icon: 'info',
+                    confirmButtonColor: '#6366f1',
+                    confirmButtonText: 'Tutup'
+                });
                 return null;
             }
 
@@ -305,6 +317,49 @@
 
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
+        }
+
+        function konfirmasiSelesai(id, lokasi, persen, bau) {
+            Swal.fire({
+                title: 'Konfirmasi Selesai',
+                text: "Apakah sampah di " + lokasi + " sudah selesai diangkut?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#22c55e',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Simpan ke Riwayat',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("{{ route('simpan-log') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({ id, lokasi, persen, bau })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: 'Data pengangkutan telah dicatat di riwayat.',
+                                icon: 'success',
+                                confirmButtonColor: '#6366f1'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Tidak dapat terhubung ke server.', 'error');
+                    });
+                }
+            })
         }
     </script>
 </body>
