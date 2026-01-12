@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Models\History; // 1. TAMBAHKAN INI
+use App\Models\History; // Pastikan model History sudah dibuat
 
 class DashboardController extends Controller
 {
@@ -128,7 +128,7 @@ class DashboardController extends Controller
         return view('riwayat', compact('logs'));
     }
 
-    // --- 3. FITUR BARU: SIMPAN LOG KE DATABASE ---
+    // --- 3. FITUR BARU: SIMPAN LOG KE DATABASE (AJAX Compatible) ---
     public function simpanLog(Request $request)
     {
         History::create([
@@ -139,6 +139,10 @@ class DashboardController extends Controller
             'waktu_pengangkutan' => now(),
         ]);
 
-        return back()->with('success', 'Riwayat pengangkutan berhasil dicatat.');
+        // Mengembalikan JSON agar tidak terjadi error "Unexpected token <" di JavaScript
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat pengangkutan berhasil dicatat.'
+        ]);
     }
 }

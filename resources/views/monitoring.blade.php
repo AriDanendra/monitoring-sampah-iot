@@ -80,7 +80,7 @@
 
         .section-title { font-size: 15px; margin: 25px 0 15px; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- Timeline Pickup Sequence --- */
+        /* Timeline Pickup Sequence */
         .timeline-container { border-left: 2px dashed #cbd5e1; margin-left: 15px; padding-left: 25px; position: relative; }
         
         .step-card { 
@@ -163,7 +163,7 @@
                                     <small style="color: #64748b;">{{ $item['lokasi'] }}</small>
                                 </div>
                                 <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                                    {{-- Tombol muncul jika Penuh (>=80%) atau Berbau (>=400) --}}
+                                    
                                     @if($item['persen'] >= 80 || (isset($item['bau']) && $item['bau'] >= 400))
                                         <button onclick="konfirmasiSelesai('{{ $item['id'] }}', '{{ $item['lokasi'] }}', {{ $item['persen'] }}, {{ $item['bau'] }})" 
                                                 style="background: #6366f1; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600;">
@@ -237,7 +237,6 @@
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
             if (unvisited.length === 0) {
-                // Menggunakan SweetAlert2
                 Swal.fire({
                     title: 'Status Aman',
                     text: 'Semua bak sampah masih di bawah ambang batas penjemputan.',
@@ -279,35 +278,20 @@
                 card.className = 'step-card';
                 card.setAttribute('data-step', i + 1);
                 
-                let iconClass = "fa-solid fa-location-dot";
-                let detailText = `<i class="fa-solid fa-up-right-from-square"></i> Lihat rute dari titik sebelumnya`;
+                let iconClass = i === 0 ? "fa-house-flag" : (i === waypointsData.length - 1 ? "fa-flag-checkered" : "fa-location-dot");
                 
-                if (i === 0) {
-                    card.classList.add('start');
-                    iconClass = "fa-solid fa-house-flag";
-                    detailText = "Titik keberangkatan armada";
-                } else if (i === waypointsData.length - 1) {
-                    card.classList.add('end');
-                    iconClass = "fa-solid fa-flag-checkered";
-                    detailText = "Titik akhir / Pembuangan";
-                }
-
                 card.innerHTML = `
-                    <div class="step-icon"><i class="${iconClass}"></i></div>
+                    <div class="step-icon"><i class="fa-solid ${iconClass}"></i></div>
                     <div class="step-info">
                         <span class="step-destination">${point.nama}</span>
-                        <span class="step-details">${detailText}</span>
+                        <span class="step-details">Lihat rute</span>
                     </div>
                 `;
 
-                if (i > 0) {
-                    card.onclick = () => {
-                        const prev = waypointsData[i-1];
-                        tampilkanRuteSegmen(prev.lat, prev.lng, point.lat, point.lng);
-                    };
-                } else {
-                    card.onclick = () => fokusKeTitik(point.lat, point.lng);
-                }
+                card.onclick = i > 0 
+                    ? () => tampilkanRuteSegmen(waypointsData[i-1].lat, waypointsData[i-1].lng, point.lat, point.lng)
+                    : () => fokusKeTitik(point.lat, point.lng);
+                
                 instructionContainer.appendChild(card);
             });
 
@@ -341,7 +325,10 @@
                         },
                         body: JSON.stringify({ id, lokasi, persen, bau })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal menghubungi server');
+                        return response.json();
+                    })
                     .then(data => {
                         if(data.success) {
                             Swal.fire({
@@ -350,7 +337,7 @@
                                 icon: 'success',
                                 confirmButtonColor: '#6366f1'
                             }).then(() => {
-                                window.location.reload();
+                                window.location.reload(); // Refresh manual hanya setelah data tersimpan
                             });
                         } else {
                             Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data.', 'error');
@@ -358,7 +345,7 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        Swal.fire('Error', 'Tidak dapat terhubung ke server.', 'error');
+                        Swal.fire('Error', 'Gagal terhubung ke server. Cek koneksi Anda.', 'error');
                     });
                 }
             })
