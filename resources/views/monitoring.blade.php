@@ -160,7 +160,13 @@
                             <div class="location-card">
                                 <div onclick="fokusKeTitik({{ $item['lat'] }}, {{ $item['lng'] }})" style="flex: 1; cursor: pointer;">
                                     <span style="font-weight: 700; color: #1e293b;">{{ $item['id'] }}</span><br>
-                                    <small style="color: #64748b;">{{ $item['lokasi'] }}</small>
+                                    <small style="color: #64748b; display: block; margin-bottom: 4px;">{{ $item['lokasi'] }}</small>
+                                    
+                                    <div style="font-size: 11px; color: #475569; display: flex; gap: 8px;">
+                                        <span><i class="fa-solid fa-fill-drip"></i> <strong>{{ $item['persen'] }}%</strong></span>
+                                        <span>|</span>
+                                        <span><i class="fa-solid fa-wind"></i> <strong>{{ $item['status_bau'] }}</strong></span>
+                                    </div>
                                 </div>
                                 <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                                     
@@ -173,7 +179,6 @@
                                             <i class="fa-solid fa-triangle-exclamation"></i> Bau Nyengat
                                         </span>
                                     @elseif($item['persen'] < 80)
-                                        {{-- Badge Aman hanya muncul jika bak TIDAK penuh dan bau < 800 --}}
                                         <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>
                                     @endif
 
@@ -207,7 +212,25 @@
         L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
 
         dataDevices.forEach(d => {
-            L.marker([d.lat, d.lng]).addTo(map).bindPopup(`<b>${d.id}</b><br>${d.lokasi}`);
+            // Konten Popup Peta dengan detail status deskriptif
+            const popupContent = `
+                <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
+                    <b style="font-size: 14px; color: #1e293b;">${d.id}</b><br>
+                    <span style="color: #64748b; font-size: 12px;">${d.lokasi}</span>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="font-size: 12px;">Kapasitas:</span>
+                        <b style="font-size: 12px; color: ${d.persen >= 80 ? '#ef4444' : '#22c55e'};">${d.persen}%</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 12px;">Kondisi Bau:</span>
+                        <b style="font-size: 12px; color: ${d.bau >= 800 ? '#b91c1c' : (d.bau >= 400 ? '#f59e0b' : '#64748b')};">
+                            ${d.status_bau}
+                        </b>
+                    </div>
+                </div>
+            `;
+            L.marker([d.lat, d.lng]).addTo(map).bindPopup(popupContent);
         });
 
         let routingControl = null;
@@ -234,7 +257,7 @@
         }
 
         function urutkanDenganNearestNeighbour() {
-            // Hanya Penuh (>=80%) atau Bau Nyengat (>=800 PPM) yang memicu rute
+            // Algoritma NN: Hanya memproses titik yang Penuh (>=80%) atau Bau Nyengat (>=800 PPM)
             let unvisited = dataDevices.filter(d => 
                 d.persen >= 80 || (d.bau && d.bau >= 800)
             ); 

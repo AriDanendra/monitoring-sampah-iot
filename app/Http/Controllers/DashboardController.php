@@ -50,6 +50,15 @@ class DashboardController extends Controller
         $currentBau = isset($telemetry['bau']) ? (int)$telemetry['bau'][0]['value'] : 0;
         $lastTs = isset($telemetry['persen']) ? $telemetry['persen'][0]['ts'] : null;
 
+        // --- LOGIKA KLASIFIKASI KADAR BAU ---
+        $statusBau = 'Aman';
+        if ($currentBau >= 800) {
+            $statusBau = 'Bau Nyengat';
+        } elseif ($currentBau >= 400) {
+            $statusBau = 'Bau';
+        }
+        // ------------------------------------
+
         // --- LOGIKA OTOMATISASI PENYIMPANAN RIWAYAT ---
         $cacheKey = "status_penuh_" . str_replace('#', '', $idTag);
         $wasFullOrSmelly = Cache::get($cacheKey, false);
@@ -101,6 +110,7 @@ class DashboardController extends Controller
             'lokasi' => $lokasi,
             'persen' => $currentPersen,
             'bau' => $currentBau,
+            'status_bau' => $statusBau, // Menambahkan label status bau
             'status' => $status,
             'update' => $update,
             'lat' => $lat,
@@ -118,6 +128,7 @@ class DashboardController extends Controller
                 'lokasi' => 'Perumahan Bukit Harapan Indah', 
                 'persen' => 10, 
                 'bau' => 100, 
+                'status_bau' => 'Aman',
                 'status' => 'offline', 
                 'update' => '1 Jam lalu',
                 'lat' => -3.990857044564276, 
@@ -133,7 +144,7 @@ class DashboardController extends Controller
         
         // Menghitung titik yang perlu diangkut (Penuh >= 80 atau Bau Nyengat >= 800)
         $titikPenuh = collect($devices)->filter(function ($item) {
-            return $item['persen'] >= 80 || (isset($item['bau']) && $item['bau'] >= 800);
+            return $item['persen'] >= 80 || $item['bau'] >= 800;
         })->count();
 
         $perangkatAktif = collect($devices)->where('status', 'online')->count();
