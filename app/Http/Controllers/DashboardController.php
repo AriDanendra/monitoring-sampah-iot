@@ -8,7 +8,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Data simulasi untuk halaman dashboard
         $devices = [
             ['id' => '#TR-01', 'lokasi' => 'Jl. Bau Massepe', 'persen' => 95, 'status' => 'offline', 'update' => 'Sekarang'],
             ['id' => '#TR-02', 'lokasi' => 'Soreang', 'persen' => 50, 'status' => 'online', 'update' => '2 Menit lalu'],
@@ -24,19 +23,20 @@ class DashboardController extends Controller
 
     public function monitoring()
     {
-        // Koordinat Kantor (Titik Awal & Akhir) sesuai input Anda
+        // Koordinat Kantor sesuai dokumen skripsi [cite: 294]
         $kantor = [
             'nama' => 'Kantor Pusat', 
             'lat' => -3.988430338950498, 
             'lng' => 119.65216109576326
         ];
 
-        // Data perangkat dengan koordinat Lokasi 1, 2, dan 3 sesuai input Anda
+        // Data perangkat dengan tambahan parameter bau (MQ-135) [cite: 160, 168]
         $devices = [
             [
                 'id' => '#TR-01', 
                 'lokasi' => 'Lokasi 1', 
                 'persen' => 95, 
+                'bau' => 200, // Normal
                 'lat' => -4.006904852098234, 
                 'lng' => 119.66253093102463
             ],
@@ -44,6 +44,7 @@ class DashboardController extends Controller
                 'id' => '#TR-02', 
                 'lokasi' => 'Lokasi 2', 
                 'persen' => 50, 
+                'bau' => 550, // Berbau (Melebihi ambang batas simulasi 400) [cite: 321]
                 'lat' => -4.010893730077395, 
                 'lng' => 119.63298928262212
             ],
@@ -51,6 +52,7 @@ class DashboardController extends Controller
                 'id' => '#TR-03', 
                 'lokasi' => 'Lokasi 3', 
                 'persen' => 10, 
+                'bau' => 100, // Normal
                 'lat' => -3.990857044564276, 
                 'lng' => 119.64606826627598
             ],
