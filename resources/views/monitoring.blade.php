@@ -118,7 +118,7 @@
         .badge-full { background: #fee2e2; color: #ef4444; }
         .badge-smell { background: #fef3c7; color: #d97706; }
 
-        .leaflet-routing-machine-container { display: none; }
+        .leaflet-routing-container { display: none; }
     </style>
 </head>
 <body>
@@ -163,7 +163,8 @@
                                     <small style="color: #64748b;">{{ $item['lokasi'] }}</small>
                                 </div>
                                 <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                                    @if($item['persen'] >= 80)
+                                    {{-- Tombol muncul jika Penuh (>=80%) atau Berbau (>=400) --}}
+                                    @if($item['persen'] >= 80 || (isset($item['bau']) && $item['bau'] >= 400))
                                         <button onclick="konfirmasiSelesai('{{ $item['id'] }}', '{{ $item['lokasi'] }}', {{ $item['persen'] }}, {{ $item['bau'] }})" 
                                                 style="background: #6366f1; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600;">
                                             Selesai Angkut
@@ -236,6 +237,7 @@
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
             if (unvisited.length === 0) {
+                // Menggunakan SweetAlert2
                 Swal.fire({
                     title: 'Status Aman',
                     text: 'Semua bak sampah masih di bawah ambang batas penjemputan.',
