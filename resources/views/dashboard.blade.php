@@ -9,15 +9,24 @@
     <link rel="stylesheet" href="{{ asset('style.css') }}">
 </head>
 <body>
+    @php
+        // Data simulasi agar tidak error "Undefined Variable"
+        $devices = [
+            ['id' => '#TR-01', 'lokasi' => 'Jl. Bau Massepe', 'persen' => 95, 'status' => 'online', 'update' => 'Sekarang'],
+            ['id' => '#TR-02', 'lokasi' => 'Soreang', 'persen' => 50, 'status' => 'online', 'update' => '2 Menit lalu'],
+            ['id' => '#TR-03', 'lokasi' => 'Ujung', 'persen' => 10, 'status' => 'offline', 'update' => '1 Jam lalu'],
+        ];
+
+        // Hitung otomatis jumlah titik yang penuh (>= 80%)
+        $titikPenuh = collect($devices)->where('persen', '>=', 80)->count();
+    @endphp
+
     <div class="dashboard-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo-box">
-                    <i class="fa-solid fa-leaf"></i>
-                </div>
+                <div class="logo-box"><i class="fa-solid fa-leaf"></i></div>
                 <span>SmartWaste <small style="font-weight: 400; opacity: 0.7;">IoT</small></span>
             </div>
-            
             <nav class="sidebar-nav">
                 <ul>
                     <li class="active"><a href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
@@ -33,7 +42,7 @@
             <header class="top-header">
                 <div class="header-left">
                     <h1>Statistik Utama</h1>
-                    <p>Pantau volume sampah dan kualitas udara secara real-time.</p>
+                    <p>Pantau status perangkat secara real-time.</p>
                 </div>
                 <div class="header-right">
                     <div class="profile-chip">
@@ -48,34 +57,20 @@
 
             <div class="dashboard-body">
                 <div class="stats-grid">
-                    <div class="stat-card blue">
+                    <div class="stat-card pink">
                         <div class="stat-content">
-                            <span class="stat-label">Volume Sampah</span>
-                            <h2 class="stat-value">85%</h2>
+                            <span class="stat-label">Total Lokasi Terpantau</span>
+                            <h2 class="stat-value">{{ count($devices) }}</h2>
                         </div>
-                        <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </div>
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-location-dot"></i></div>
                     </div>
 
                     <div class="stat-card orange">
                         <div class="stat-content">
-                            <span class="stat-label">Kadar Gas/Bau</span>
-                            <h2 class="stat-value">Normal</h2>
+                            <span class="stat-label">Titik Penuh (Siap Angkut)</span>
+                            <h2 class="stat-value">{{ $titikPenuh }}</h2>
                         </div>
-                        <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-wind"></i>
-                        </div>
-                    </div>
-
-                    <div class="stat-card pink">
-                        <div class="stat-content">
-                            <span class="stat-label">Total Lokasi</span>
-                            <h2 class="stat-value">12</h2>
-                        </div>
-                        <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-trash-can"></i></div>
                     </div>
 
                     <div class="stat-card green">
@@ -83,9 +78,7 @@
                             <span class="stat-label">Perangkat Aktif</span>
                             <h2 class="stat-value">10</h2>
                         </div>
-                        <div class="stat-icon-wrapper">
-                            <i class="fa-solid fa-microchip"></i>
-                        </div>
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-microchip"></i></div>
                     </div>
                 </div>
 
@@ -106,42 +99,28 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach($devices as $item)
+                                @php
+                                    // Warna bar otomatis sesuai persentase
+                                    $colorClass = 'emerald';
+                                    if ($item['persen'] >= 80) $colorClass = 'red';
+                                    elseif ($item['persen'] >= 40) $colorClass = 'orange';
+                                @endphp
                                 <tr>
-                                    <td>#TR-01</td>
-                                    <td><strong>Jl. Bau Massepe</strong></td>
+                                    <td>{{ $item['id'] }}</td>
+                                    <td><strong>{{ $item['lokasi'] }}</strong></td>
                                     <td>
                                         <div class="progress-container">
-                                            <div class="progress-track"><div class="progress-fill red" style="width: 95%"></div></div>
-                                            <span>95%</span>
+                                            <div class="progress-track">
+                                                <div class="progress-fill {{ $colorClass }}" style="width: {{ $item['persen'] }}%"></div>
+                                            </div>
+                                            <span>{{ $item['persen'] }}%</span>
                                         </div>
                                     </td>
-                                    <td><span class="status-badge online">Online</span></td>
-                                    <td>Sekarang</td>
+                                    <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
+                                    <td>{{ $item['update'] }}</td>
                                 </tr>
-                                <tr>
-                                    <td>#TR-02</td>
-                                    <td><strong>Soreang</strong></td>
-                                    <td>
-                                        <div class="progress-container">
-                                            <div class="progress-track"><div class="progress-fill orange" style="width: 50%"></div></div>
-                                            <span>50%</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge online">Online</span></td>
-                                    <td>2 Menit lalu</td>
-                                </tr>
-                                <tr>
-                                    <td>#TR-03</td>
-                                    <td><strong>Ujung</strong></td>
-                                    <td>
-                                        <div class="progress-container">
-                                            <div class="progress-track"><div class="progress-fill emerald" style="width: 10%"></div></div>
-                                            <span>10%</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge offline">Offline</span></td>
-                                    <td>1 Jam lalu</td>
-                                </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
