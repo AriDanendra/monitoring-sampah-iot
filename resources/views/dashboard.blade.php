@@ -10,33 +10,18 @@
 </head>
 <body>
     @php
-        // Data simulasi agar tidak error "Undefined Variable"
+        // Data simulasi
         $devices = [
             ['id' => '#TR-01', 'lokasi' => 'Jl. Bau Massepe', 'persen' => 95, 'status' => 'online', 'update' => 'Sekarang'],
             ['id' => '#TR-02', 'lokasi' => 'Soreang', 'persen' => 50, 'status' => 'online', 'update' => '2 Menit lalu'],
             ['id' => '#TR-03', 'lokasi' => 'Ujung', 'persen' => 10, 'status' => 'offline', 'update' => '1 Jam lalu'],
         ];
 
-        // Hitung otomatis jumlah titik yang penuh (>= 80%)
         $titikPenuh = collect($devices)->where('persen', '>=', 80)->count();
     @endphp
 
     <div class="dashboard-wrapper">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-box"><i class="fa-solid fa-leaf"></i></div>
-                <span>SmartWaste <small style="font-weight: 400; opacity: 0.7;">IoT</small></span>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="active"><a href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
-                    <li><a href="#"><i class="fa-solid fa-map-location-dot"></i> Monitoring</a></li>
-                    <li><a href="#"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
-                    <li><a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a></li>
-                    <li style="margin-top: 20px;"><a href="#" style="color: #ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a></li>
-                </ul>
-            </nav>
-        </aside>
+        @include('partials.sidebar')
 
         <main class="main-content">
             <header class="top-header">
@@ -85,7 +70,9 @@
                 <div class="data-section">
                     <div class="section-header">
                         <h3>Status Detail Perangkat</h3>
-                        <button class="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
+                        <button class="btn-refresh" onclick="location.reload();">
+                            <i class="fa-solid fa-rotate"></i> Refresh Data
+                        </button>
                     </div>
                     <div class="table-responsive">
                         <table class="modern-table">
@@ -104,7 +91,6 @@
                                     <td>{{ $item['id'] }}</td>
                                     <td><strong>{{ $item['lokasi'] }}</strong></td>
                                     <td>
-                                        {{-- Progress fill dan track dihapus, hanya menyisakan teks angka --}}
                                         <span style="font-weight: 600;">{{ $item['persen'] }}%</span>
                                     </td>
                                     <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
