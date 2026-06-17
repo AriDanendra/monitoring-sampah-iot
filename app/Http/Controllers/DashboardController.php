@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     // --- KONFIGURASI LANGSUNG (HARDCODED) ---
     private $baseUrl = 'https://thingsboard.cloud';
-    private $username = 'Zetsukami213@gmail.com'; 
+    private $username = 'zetsukami213@gmail.com'; 
     private $password = '13012004';
 
     // Device IDs dari ThingsBoard
