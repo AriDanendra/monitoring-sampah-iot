@@ -11,12 +11,12 @@ class DashboardController extends Controller
 {
     // --- KONFIGURASI LANGSUNG (HARDCODED) ---
     private $baseUrl = 'https://thingsboard.cloud';
-    private $username = 'adanendra20@gmail.com'; 
+    private $username = 'Zetsukami213@gmail.com'; 
     private $password = '13012004';
 
     // Device IDs dari ThingsBoard
-    private $deviceIdTR01 = '7d7292d0-ef9d-11f0-931e-d77481df73d2'; 
-    private $deviceIdTR02 = 'd9e974b0-efda-11f0-a6fc-1dffa956f056'; 
+    private $deviceIdTR01 = 'bd7c1110-6a3d-11f1-8797-0936777895d2'; 
+    private $deviceIdTR02 = 'e6e20f00-6a3d-11f1-ad38-35390c349091'; 
 
     private function getThingsBoardToken()
     {
@@ -123,17 +123,7 @@ class DashboardController extends Controller
         return [
             $this->formatDeviceData($this->deviceIdTR01, '#TR-01', 'Grand Sulawesi Parepare', -4.006904852098234, 119.66253093102463),
             $this->formatDeviceData($this->deviceIdTR02, '#TR-02', 'Perumahan Pare Town House', -4.010893730077395, 119.63298928262212),
-            [
-                'id' => '#TR-03', 
-                'lokasi' => 'Perumahan Bukit Harapan Indah', 
-                'persen' => 10, 
-                'bau' => 100, 
-                'status_bau' => 'Aman',
-                'status' => 'offline', 
-                'update' => '1 Jam lalu',
-                'lat' => -3.990857044564276, 
-                'lng' => 119.64606826627598
-            ],
+            
         ];
     }
 
