@@ -50,38 +50,30 @@ class DashboardController extends Controller
         $currentBau = isset($telemetry['bau']) ? (int)$telemetry['bau'][0]['value'] : 0;
         $lastTs = isset($telemetry['persen']) ? $telemetry['persen'][0]['ts'] : null;
 
-        // --- LOGIKA KLASIFIKASI KADAR BAU ---
         $statusBau = 'Aman';
         if ($currentBau >= 800) {
             $statusBau = 'Bau Nyengat';
         } elseif ($currentBau >= 400) {
             $statusBau = 'Bau';
         }
-        // ------------------------------------
 
-        // --- LOGIKA OTOMATISASI PENYIMPANAN RIWAYAT ---
         $cacheKey = "status_penuh_" . str_replace('#', '', $idTag);
         $wasFullOrSmelly = Cache::get($cacheKey, false);
 
-        // 1. Jika sampah terdeteksi Penuh (>= 80%) ATAU Bau Nyengat (>= 800), tandai di sistem
         if ($currentPersen >= 80 || $currentBau >= 800) {
             Cache::put($cacheKey, true, now()->addDays(7));
         } 
 
-        // 2. Jika sebelumnya ditandai perlu diangkut DAN sekarang sudah kosong (< 10%)
         if ($wasFullOrSmelly && $currentPersen < 10) {
             History::create([
                 'device_id' => $idTag,
                 'lokasi' => $lokasi,
-                'kapasitas_terakhir' => 100, // Asumsi diangkut saat mencapai batas
+                'kapasitas_terakhir' => 100, 
                 'kadar_bau_terakhir' => $currentBau,
                 'waktu_pengangkutan' => now(),
             ]);
-            
-            // Hapus tanda di cache karena sudah selesai diangkut
             Cache::forget($cacheKey);
         }
-        // ----------------------------------------------
 
         $status = 'offline';
         $update = 'Tidak ada data';
@@ -110,7 +102,7 @@ class DashboardController extends Controller
             'lokasi' => $lokasi,
             'persen' => $currentPersen,
             'bau' => $currentBau,
-            'status_bau' => $statusBau, // Menambahkan label status bau
+            'status_bau' => $statusBau, 
             'status' => $status,
             'update' => $update,
             'lat' => $lat,
@@ -118,13 +110,75 @@ class DashboardController extends Controller
         ];
     }
 
+    // --- FUNGSI HELPER UNTUK MEMBUAT DATA DUMMY ---
+    private function createDummyData($idTag, $lokasi, $lat, $lng, $persen, $bau)
+    {
+        $statusBau = 'Aman';
+        if ($bau >= 800) {
+            $statusBau = 'Bau Nyengat';
+        } elseif ($bau >= 400) {
+            $statusBau = 'Bau';
+        }
+
+        return [
+            'id' => $idTag,
+            'lokasi' => $lokasi,
+            'persen' => $persen,
+            'bau' => $bau,
+            'status_bau' => $statusBau,
+            'status' => 'online', 
+            'update' => 'Baru saja',
+            'lat' => $lat,
+            'lng' => $lng
+        ];
+    }
+
     private function getDeviceData()
     {
-        return [
+        // 1. Data Asli IoT
+        $devices = [
             $this->formatDeviceData($this->deviceIdTR01, '#TR-01', 'Grand Sulawesi Parepare', -4.006904852098234, 119.66253093102463),
             $this->formatDeviceData($this->deviceIdTR02, '#TR-02', 'Perumahan Pare Town House', -4.010893730077395, 119.63298928262212),
-            
         ];
+
+        // 2. Data Dummy (2 Lokasi x 4 Kecamatan = 8 Titik)
+        $dummyList = [
+            // --- KECAMATAN UJUNG (Pusat Kota/Barat) ---
+            ['Pasar Senggol', -4.007292, 119.621973, 95, 900],   // Masuk Rute (Penuh & Bau)
+            ['Monumen Habibie', -4.012640, 119.6220213, 45, 300], // Aman
+
+            // --- KECAMATAN SOREANG (Utara) ---
+            ['Pasar Lakessi', -4.004092, 119.627335, 85, 450], // Masuk Rute (Penuh)
+            ['Polsek Soreang', -3.990735, 119.651813, 20, 100], // Aman
+
+            // --- KECAMATAN BACUKIKI BARAT (Selatan) ---
+            ['RS dr. Hasri Ainun Habibie', -4.048255, 119.621842, 90, 850], // Masuk Rute (Penuh & Bau)
+            ['Islamic Center', -4.015800, 119.623808, 30, 150], // Aman
+
+            // --- KECAMATAN BACUKIKI (Timur/Pedalaman) ---
+            ['Puskesmas Lompoe', -4.015252, 119.657346, 40, 850], // Masuk Rute (Bau Nyengat)
+            ['Kantor Camat', -4.022163, 119.656651, 80, 200], // Masuk Rute (Penuh)
+        ];
+
+        // 3. Gabungkan Data Dummy ke Daftar Devices
+        $idCounter = 3; // Mulai ID dari #TR-03
+        foreach ($dummyList as $d) {
+            // Format ID, contoh: #TR-03, #TR-04, dst
+            $idTag = sprintf('#TR-%02d', $idCounter);
+            
+            // Masukkan ke array devices
+            $devices[] = $this->createDummyData(
+                $idTag, 
+                $d[0],           // Nama Lokasi
+                $d[1],           // Latitude
+                $d[2],           // Longitude
+                $d[3],           // Kapasitas (%)
+                $d[4]            // Bau (PPM)
+            );
+            $idCounter++;
+        }
+
+        return $devices;
     }
 
     public function index()
@@ -132,7 +186,6 @@ class DashboardController extends Controller
         $devices = $this->getDeviceData();
         $totalLokasi = count($devices);
         
-        // Menghitung titik yang perlu diangkut (Penuh >= 80 atau Bau Nyengat >= 800)
         $titikPenuh = collect($devices)->filter(function ($item) {
             return $item['persen'] >= 80 || $item['bau'] >= 800;
         })->count();
