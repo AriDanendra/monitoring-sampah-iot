@@ -119,6 +119,9 @@
         .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
 
         .leaflet-routing-container { display: none; }
+        
+        /* Tambahan class untuk menghilangkan border pada marker custom agar terlihat bersih */
+        .custom-route-marker { background: none; border: none; }
     </style>
 </head>
 <body>
@@ -212,7 +215,6 @@
         L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
 
         dataDevices.forEach(d => {
-            // Konten Popup Peta dengan detail status deskriptif
             const popupContent = `
                 <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
                     <b style="font-size: 14px; color: #1e293b;">${d.id}</b><br>
@@ -234,6 +236,15 @@
         });
 
         let routingControl = null;
+        let ruteElements = []; // Menyimpan marker nomor dan garis rute manual
+
+        // Fungsi bantu untuk membersihkan garis dan marker rute sebelumnya
+        function bersihkanRuteManual() {
+            if (ruteElements.length > 0) {
+                ruteElements.forEach(el => map.removeLayer(el));
+                ruteElements = [];
+            }
+        }
 
         function fokusKeTitik(lat, lng) {
             map.flyTo([lat, lng], 17);
@@ -241,11 +252,12 @@
 
         function tampilkanRuteSegmen(lat1, lng1, lat2, lng2) {
             if (routingControl) map.removeControl(routingControl);
+            bersihkanRuteManual();
 
             routingControl = L.Routing.control({
                 waypoints: [L.latLng(lat1, lng1), L.latLng(lat2, lng2)],
                 createMarker: function() { return null; },
-                lineOptions: { styles: [{ color: '#6366f1', weight: 6 }] }
+                lineOptions: { styles: [{ color: '#3b82f6', weight: 6, opacity: 0.9 }] } 
             }).addTo(map);
             
             const bounds = L.latLngBounds([[lat1, lng1], [lat2, lng2]]);
@@ -257,11 +269,7 @@
         }
 
         function urutkanDenganNearestNeighbour() {
-            // Algoritma NN: Hanya memproses titik yang Penuh (>=80%) atau Bau Nyengat (>=800 PPM)
-            let unvisited = dataDevices.filter(d => 
-                d.persen >= 80 || (d.bau && d.bau >= 800)
-            ); 
-            
+            let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 800)); 
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
@@ -325,10 +333,65 @@
             });
 
             if (routingControl) map.removeControl(routingControl);
+            bersihkanRuteManual();
+
+            // Kumpulan warna yang kontras untuk membedakan urutan (Merah, Oranye, Hijau, Cyan, Biru, Ungu, Pink)
+            const arrayWarna = ['#ef4444', '#f97316', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+
             routingControl = L.Routing.control({
                 waypoints: waypointsData.map(p => L.latLng(p.lat, p.lng)),
-                createMarker: function() { return null; }
+                createMarker: function() { return null; },
+                lineOptions: { 
+                    addWaypoints: false,
+                    // Garis bawaan disembunyikan agar kita bisa menggambar garis beda warna
+                    styles: [{ color: 'transparent', weight: 0 }] 
+                }
             }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                const route = e.routes[0];
+                const coords = route.coordinates;
+                
+                if (route.waypointIndices) {
+                    for (let i = 0; i < route.waypointIndices.length - 1; i++) {
+                        let startIndex = route.waypointIndices[i];
+                        let endIndex = route.waypointIndices[i+1];
+                        
+                        // Menarik koordinat rute khusus untuk segmen ini
+                        let segmentCoords = coords.slice(startIndex, endIndex + 1);
+                        
+                        // Mengambil warna dari daftar array secara bergantian
+                        let warnaSegmen = arrayWarna[i % arrayWarna.length];
+
+                        // Menggambar garis jalan dengan warna unik per urutan
+                        let polyline = L.polyline(segmentCoords, {
+                            color: warnaSegmen,
+                            weight: 6,
+                            opacity: 0.9
+                        }).addTo(map);
+                        
+                        // Letakkan angka tepat di tengah jalan per-segmen
+                        let midIndex = Math.floor((startIndex + endIndex) / 2);
+                        let midLatLng = coords[midIndex];
+
+                        let marker = L.marker(midLatLng, {
+                            icon: L.divIcon({
+                                className: 'custom-route-marker',
+                                // Warna marker angka disamakan dengan warna garis jalannya
+                                html: `<div style="background-color: ${warnaSegmen}; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${i + 1}</div>`,
+                                iconSize: [26, 26],
+                                iconAnchor: [13, 13]
+                            })
+                        }).addTo(map);
+                        
+                        let popupText = `Segmen ${i + 1}: Menuju ${waypointsData[i+1].nama}`;
+                        marker.bindTooltip(popupText, { direction: 'top', offset: [0, -10] });
+
+                        // Menyimpan ke array untuk dibersihkan saat refresh
+                        ruteElements.push(polyline, marker);
+                    }
+                }
+            });
 
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
