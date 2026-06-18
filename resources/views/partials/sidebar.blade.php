@@ -1,4 +1,4 @@
-<aside class="sidebar">
+<aside id="sidebar" class="sidebar">
     <div class="sidebar-header">
         <div class="logo-box">
             <i class="fa-solid fa-leaf"></i>
@@ -7,6 +7,9 @@
             <span class="brand-name">Monitoring Sampah</span>
             <span class="brand-sub">Parepare <small class="iot-tag">IoT System</small></span>
         </div>
+        <button id="close-sidebar-btn" class="close-sidebar-btn">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
     
     <nav class="sidebar-nav">
@@ -26,6 +29,6 @@
                     <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
                 </a>
             </li>
-            </ul>
+        </ul>
     </nav>
 </aside>

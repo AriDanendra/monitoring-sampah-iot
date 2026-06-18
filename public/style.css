@@ -298,3 +298,138 @@ body {
 
 .online { background: #dcfce7; color: #15803d; }
 .offline { background: #fee2e2; color: #b91c1c; }
+
+/* =========================================================
+   RESPONSIVE DESIGN (MOBILE VIEW) - REVISI TOTAL
+========================================================= */
+
+/* Elemen tombol navigasi yang disembunyikan di layar laptop/desktop */
+.mobile-menu-btn, .close-sidebar-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+}
+
+/* Lapisan gelap di belakang sidebar saat aktif di HP */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* ATURAN KHUSUS: Layar HP & Tablet (Maksimal 768px) */
+@media screen and (max-width: 768px) {
+    
+    /* Pastikan Peta / Map responsif di HP */
+    #map, .map-container {
+        width: 100% !important;
+        height: 300px; /* Sesuaikan tingginya agar tidak terlalu makan tempat di HP */
+        border-radius: 8px;
+    }
+    /* 1. Menampilkan Tombol Navigasi Mobile */
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .close-sidebar-btn {
+        display: block;
+        margin-left: auto;
+        color: #ef4444; /* Warna tombol silang tutup */
+    }
+
+    /* 2. Perbaikan Sidebar Melayang di HP */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%; /* Tersembunyi aman di kiri luar layar */
+        height: 100vh;
+        width: 260px;
+        background-color: #ffffff; /* WAJIB: Diisi warna solid agar konten dashboard tidak tembus pandang */
+        z-index: 999; /* Berada di paling depan */
+        transition: all 0.3s ease-in-out;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.15);
+        padding: 20px 15px;
+        box-sizing: border-box;
+    }
+
+    /* Class memunculkan sidebar (dipicu oleh JavaScript) */
+    .sidebar.active-mobile {
+        left: 0; 
+    }
+
+    /* Menampilkan overlay gelap */
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* 3. Reset Konten Utama agar Penuh ke Layar HP */
+    .dashboard-wrapper {
+        display: block; /* Mematikan flexbox desktop sementara di HP */
+        width: 100%;
+    }
+
+    .main-content {
+        margin-left: 0 !important; /* Memaksa margin kiri kembali ke 0 */
+        padding: 15px !important;  /* Memberikan jarak tepi yang ideal di HP */
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Mengatur teks judul header agar proporsional di HP */
+    .top-header {
+        padding: 10px 0 20px 0;
+    }
+    
+    .top-header .header-left h1 {
+        font-size: 1.3rem;
+    }
+    
+    .top-header .header-left p {
+        font-size: 0.85rem;
+    }
+
+    /* 4. Mengubah Struktur Kartu Statistik Menjadi 1 Kolom ke Bawah */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* Dipaksa berbaris ke bawah */
+        gap: 15px;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    .stat-card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 5. Mengamankan Tabel Data Agar Bisa Di-scroll Horizontal */
+    .data-section {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .table-responsive {
+        width: 100%;
+        display: block;
+        overflow-x: auto; /* Aktifkan geser kanan-kiri di tabel */
+        -webkit-overflow-scrolling: touch; /* Scroll mulus di iOS/Safari */
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .modern-table th, 
+    .modern-table td {
+        font-size: 0.85rem;
+        padding: 10px 12px;
+        white-space: nowrap; /* Mencegah teks tabel patah berantakan ke bawah */
+    }
+}

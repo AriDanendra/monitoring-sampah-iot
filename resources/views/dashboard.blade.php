@@ -16,11 +16,18 @@
     <div class="dashboard-wrapper">
         @include('partials.sidebar')
 
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
         <main class="main-content">
             <header class="top-header">
-                <div class="header-left">
-                    <h1>Statistik Utama</h1>
-                    <p>Pantau status perangkat secara real-time.</p>
+                <div class="header-left" style="display: flex; align-items: center; gap: 15px;">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1>Statistik Utama</h1>
+                        <p>Pantau status perangkat secara real-time.</p>
+                    </div>
                 </div>
             </header>
 
@@ -29,7 +36,7 @@
                     <div class="stat-card pink">
                         <div class="stat-content">
                             <span class="stat-label">Total Lokasi Terpantau</span>
-                            <h2 class="stat-value" id="stat-total">{{ $totalLokasi }}</h2>
+                            <h2 class="stat-value" id="stat-total">{{ $totalLokasi ?? 0 }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-location-dot"></i></div>
                     </div>
@@ -37,7 +44,7 @@
                     <div class="stat-card orange">
                         <div class="stat-content">
                             <span class="stat-label">Titik Perlu Angkut</span>
-                            <h2 class="stat-value" id="stat-penuh">{{ $titikPenuh }}</h2>
+                            <h2 class="stat-value" id="stat-penuh">{{ $titikPenuh ?? 0 }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-trash-can"></i></div>
                     </div>
@@ -45,7 +52,7 @@
                     <div class="stat-card green">
                         <div class="stat-content">
                             <span class="stat-label">Perangkat Aktif</span>
-                            <h2 class="stat-value" id="stat-aktif">{{ $perangkatAktif }}</h2>
+                            <h2 class="stat-value" id="stat-aktif">{{ $perangkatAktif ?? 0 }}</h2>
                         </div>
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-microchip"></i></div>
                     </div>
@@ -71,22 +78,24 @@
                                 </tr>
                             </thead>
                             <tbody id="table-body">
-                                @foreach($devices as $item)
-                                <tr>
-                                    <td>{{ $item['id'] }}</td>
-                                    <td><strong>{{ $item['lokasi'] }}</strong></td>
-                                    <td><span style="font-weight: 600;">{{ $item['persen'] }}%</span></td>
-                                    <td>
-                                        @if($item['bau'] >= 800)
-                                            <span class="bau-bahaya"><i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat ({{ $item['bau'] }} PPM)</span>
-                                        @else
-                                            <span class="bau-normal"><i class="fa-solid fa-circle-check"></i> Aman ({{ $item['bau'] }} PPM)</span>
-                                        @endif
-                                    </td>
-                                    <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
-                                    <td>{{ $item['update'] }}</td>
-                                </tr>
-                                @endforeach
+                                @if(isset($devices))
+                                    @foreach($devices as $item)
+                                    <tr>
+                                        <td>{{ $item['id'] }}</td>
+                                        <td><strong>{{ $item['lokasi'] }}</strong></td>
+                                        <td><span style="font-weight: 600;">{{ $item['persen'] }}%</span></td>
+                                        <td>
+                                            @if($item['bau'] >= 800)
+                                                <span class="bau-bahaya"><i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat ({{ $item['bau'] }} PPM)</span>
+                                            @else
+                                                <span class="bau-normal"><i class="fa-solid fa-circle-check"></i> Aman ({{ $item['bau'] }} PPM)</span>
+                                            @endif
+                                        </td>
+                                        <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
+                                        <td>{{ $item['update'] }}</td>
+                                    </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -96,24 +105,36 @@
     </div>
 
     <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active-mobile');
+            overlay.classList.toggle('active');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Realtime Fetch Script yang sudah ada sebelumnya
         setInterval(async () => {
             try {
                 const response = await fetch('/api/realtime-data');
                 const data = await response.json();
 
-                // Update Statistik Atas
                 document.getElementById('stat-total').innerText = data.totalLokasi;
                 document.getElementById('stat-penuh').innerText = data.titikPenuh;
                 document.getElementById('stat-aktif').innerText = data.perangkatAktif;
 
-                // Update Tabel
                 let tbody = '';
                 data.devices.forEach(item => {
                     let bauHtml = item.bau >= 800
                         ? `<span class="bau-bahaya"><i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat (${item.bau} PPM)</span>`
                         : `<span class="bau-normal"><i class="fa-solid fa-circle-check"></i> Aman (${item.bau} PPM)</span>`;
                     
-                    // Format status huruf kapital awal
                     let statusCap = item.status.charAt(0).toUpperCase() + item.status.slice(1);
 
                     tbody += `
@@ -131,7 +152,7 @@
             } catch (error) {
                 console.error("Gagal update data real-time:", error);
             }
-        }, 5000); // 5000ms = 5 detik
+        }, 5000);
     </script>
 </body>
 </html>

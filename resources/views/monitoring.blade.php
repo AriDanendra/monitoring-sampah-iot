@@ -46,12 +46,17 @@
 <body>
     <div class="dashboard-wrapper">
         @include('partials.sidebar')
-
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
         <main class="main-content">
             <header class="top-header">
-                <div class="header-left">
-                    <h1>Monitoring & Rute Optimal</h1>
-                    <p>Optimasi rute pengangkutan sampah berbasis real-time data.</p>
+                <div class="header-left" style="display: flex; align-items: center; gap: 15px;">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1>Monitoring & Rute Optimal</h1>
+                        <p>Optimasi rute pengangkutan sampah berbasis real-time data.</p>
+                    </div>
                 </div>
             </header>
 
@@ -322,6 +327,21 @@
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
         }
+    </script>
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active-mobile');
+            overlay.classList.toggle('active');
+        }
+
+        if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
+        if(overlay) overlay.addEventListener('click', toggleSidebar);
     </script>
 </body>
 </html>
