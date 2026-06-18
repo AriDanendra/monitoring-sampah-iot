@@ -11,6 +11,9 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/monitoring', [DashboardController::class, 'monitoring'])->name('monitoring');
 
+// Endpoint API untuk Real-Time Data (Dipanggil oleh JavaScript setiap 5 detik)
+Route::get('/api/realtime-data', [DashboardController::class, 'getRealtimeData'])->name('api.realtime');
+
 // Fitur Riwayat
 Route::get('/riwayat', [DashboardController::class, 'riwayat'])->name('riwayat');
 Route::delete('/riwayat/{id}', [DashboardController::class, 'hapusRiwayat'])->name('hapus-riwayat');

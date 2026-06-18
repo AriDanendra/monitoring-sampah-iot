@@ -144,36 +144,30 @@ class DashboardController extends Controller
         // 2. Data Dummy (2 Lokasi x 4 Kecamatan = 8 Titik)
         $dummyList = [
             // --- KECAMATAN UJUNG (Pusat Kota/Barat) ---
-            ['Pasar Senggol', -4.007292, 119.621973, 95, 900],   // Masuk Rute (Penuh & Bau)
-            ['Monumen Habibie', -4.012640, 119.6220213, 45, 300], // Aman
+            ['Pasar Senggol', -4.007292, 119.621973, 95, 900],
+            ['Monumen Habibie', -4.012640, 119.6220213, 45, 300],
 
             // --- KECAMATAN SOREANG (Utara) ---
-            ['Pasar Lakessi', -4.004092, 119.627335, 85, 450], // Masuk Rute (Penuh)
-            ['Polsek Soreang', -3.990735, 119.651813, 20, 100], // Aman
+            ['Pasar Lakessi', -4.004092, 119.627335, 85, 450],
+            ['Polsek Soreang', -3.990735, 119.651813, 20, 100],
 
             // --- KECAMATAN BACUKIKI BARAT (Selatan) ---
-            ['RS dr. Hasri Ainun Habibie', -4.048255, 119.621842, 90, 850], // Masuk Rute (Penuh & Bau)
-            ['Islamic Center', -4.015800, 119.623808, 30, 150], // Aman
+            ['RS dr. Hasri Ainun Habibie', -4.048255, 119.621842, 90, 850],
+            ['Islamic Center', -4.015800, 119.623808, 30, 150],
 
             // --- KECAMATAN BACUKIKI (Timur/Pedalaman) ---
-            ['Puskesmas Lompoe', -4.015252, 119.657346, 40, 850], // Masuk Rute (Bau Nyengat)
-            ['Kantor Camat', -4.022163, 119.656651, 80, 200], // Masuk Rute (Penuh)
+            ['Puskesmas Lompoe', -4.015252, 119.657346, 40, 850],
+            ['Kantor Camat', -4.022163, 119.656651, 80, 200],
         ];
 
         // 3. Gabungkan Data Dummy ke Daftar Devices
-        $idCounter = 3; // Mulai ID dari #TR-03
+        $idCounter = 3;
         foreach ($dummyList as $d) {
-            // Format ID, contoh: #TR-03, #TR-04, dst
             $idTag = sprintf('#TR-%02d', $idCounter);
             
-            // Masukkan ke array devices
             $devices[] = $this->createDummyData(
                 $idTag, 
-                $d[0],           // Nama Lokasi
-                $d[1],           // Latitude
-                $d[2],           // Longitude
-                $d[3],           // Kapasitas (%)
-                $d[4]            // Bau (PPM)
+                $d[0], $d[1], $d[2], $d[3], $d[4]            
             );
             $idCounter++;
         }
@@ -239,5 +233,32 @@ class DashboardController extends Controller
     {
         History::truncate();
         return redirect()->back()->with('success', 'Semua data riwayat telah dikosongkan.');
+    }
+
+    // --- FUNGSI BARU UNTUK FETCH API (REAL-TIME UPDATE) ---
+    public function getRealtimeData()
+    {
+        $devices = $this->getDeviceData();
+        $kantor = [
+            'nama' => 'TPS', 
+            'lat' => -3.988430338950498, 
+            'lng' => 119.65216109576326
+        ];
+        
+        $totalLokasi = count($devices);
+        
+        $titikPenuh = collect($devices)->filter(function ($item) {
+            return $item['persen'] >= 80 || $item['bau'] >= 800;
+        })->count();
+
+        $perangkatAktif = collect($devices)->where('status', 'online')->count();
+
+        return response()->json([
+            'devices' => $devices,
+            'kantor' => $kantor,
+            'totalLokasi' => $totalLokasi,
+            'titikPenuh' => $titikPenuh,
+            'perangkatAktif' => $perangkatAktif
+        ]);
     }
 }

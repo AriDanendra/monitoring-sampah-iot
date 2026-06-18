@@ -7,120 +7,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('style.css') }}">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        /* Layout Dasar Dashboard */
         body, html { height: 100%; margin: 0; overflow: hidden; } 
         .dashboard-wrapper { display: flex; height: 100vh; }
         .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow: hidden; }
-
-        .monitoring-layout { 
-            display: flex; 
-            gap: 20px; 
-            flex: 1; 
-            margin-top: 15px; 
-            min-height: 0; 
-        }
-
-        /* Side Panel Container */
-        .side-panel { 
-            width: 380px; 
-            background: white; 
-            border-radius: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            height: 100%;
-            overflow: hidden; 
-        }
-
-        .panel-header {
-            padding: 20px;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .panel-body {
-            flex: 1;
-            padding: 0 20px 20px 20px;
-            overflow-y: auto;
-        }
-        
+        .monitoring-layout { display: flex; gap: 20px; flex: 1; margin-top: 15px; min-height: 0; }
+        .side-panel { width: 380px; background: white; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); height: 100%; overflow: hidden; }
+        .panel-header { padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 10px; }
+        .panel-body { flex: 1; padding: 0 20px 20px 20px; overflow-y: auto; }
         .panel-body::-webkit-scrollbar { width: 5px; }
         .panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        #map { 
-            flex: 1; 
-            border-radius: 15px; 
-            border: 4px solid white; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            z-index: 1; 
-            height: 100%; 
-        }
-
-        .btn-all-route { 
-            background: #22c55e; color: white; border: none; padding: 14px; border-radius: 10px; 
-            font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            gap: 10px; flex: 1; transition: 0.3s;
-        }
+        #map { flex: 1; border-radius: 15px; border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 1; height: 100%; }
+        .btn-all-route { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; transition: 0.3s; }
         .btn-all-route:hover { background: #16a34a; transform: translateY(-2px); }
-
-        .btn-refresh-action {
-            background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;
-            width: 48px; height: 48px; border-radius: 10px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s;
-        }
-        .btn-refresh-action:hover { background: #f1f5f9; color: #1e293b; }
-
         .section-title { font-size: 15px; margin: 25px 0 15px; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Timeline Pickup Sequence */
         .timeline-container { border-left: 2px dashed #cbd5e1; margin-left: 15px; padding-left: 25px; position: relative; }
-        
-        .step-card { 
-            background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; 
-            border: 1px solid #e2e8f0; cursor: pointer; position: relative; transition: 0.2s;
-            display: flex; align-items: flex-start; gap: 12px;
-        }
+        .step-card { background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; cursor: pointer; position: relative; transition: 0.2s; display: flex; align-items: flex-start; gap: 12px; }
         .step-card:hover { border-color: #6366f1; background: #f8faff; transform: translateX(5px); }
-
-        .step-card::before { 
-            content: attr(data-step); 
-            position: absolute; left: -36px; top: 12px; 
-            width: 22px; height: 22px; 
-            background: #6366f1; color: white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 700; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
+        .step-card::before { content: attr(data-step); position: absolute; left: -36px; top: 12px; width: 22px; height: 22px; background: #6366f1; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .step-icon { color: #94a3b8; font-size: 16px; margin-top: 2px; }
         .step-info { flex: 1; }
         .step-destination { font-weight: 700; color: #1e293b; font-size: 13.5px; display: block; margin-bottom: 2px; }
         .step-details { font-size: 11px; color: #6366f1; font-weight: 500; display: flex; align-items: center; gap: 4px; }
-
         .step-card.start::before { background: #22c55e; }
         .step-card.end::before { background: #ef4444; }
-
-        /* List Lokasi */
-        .location-card { 
-            padding: 12px; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
-        }
+        .location-card { padding: 12px; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .location-card:hover { background: #f8fafc; border-color: #6366f1; }
-        
         .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .badge-full { background: #fee2e2; color: #ef4444; }
         .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-
         .leaflet-routing-container { display: none; }
-        
-        /* Tambahan class untuk menghilangkan border pada marker custom agar terlihat bersih */
         .custom-route-marker { background: none; border: none; }
     </style>
 </head>
@@ -142,9 +61,6 @@
                         <button class="btn-all-route" onclick="buatRuteKeliling()">
                             <i class="fa-solid fa-truck-fast"></i> Mulai Rute
                         </button>
-                        <button class="btn-refresh-action" onclick="window.location.reload()" title="Refresh Data">
-                            <i class="fa-solid fa-arrows-rotate"></i>
-                        </button>
                     </div>
 
                     <div class="panel-body">
@@ -159,36 +75,7 @@
                             <h3 class="section-title">
                                 <i class="fa-solid fa-hospital-user"></i> Status Titik Bak Sampah
                             </h3>
-                            @foreach($devices as $item)
-                            <div class="location-card">
-                                <div onclick="fokusKeTitik({{ $item['lat'] }}, {{ $item['lng'] }})" style="flex: 1; cursor: pointer;">
-                                    <span style="font-weight: 700; color: #1e293b;">{{ $item['id'] }}</span><br>
-                                    <small style="color: #64748b; display: block; margin-bottom: 4px;">{{ $item['lokasi'] }}</small>
-                                    
-                                    <div style="font-size: 11px; color: #475569; display: flex; gap: 8px;">
-                                        <span><i class="fa-solid fa-fill-drip"></i> <strong>{{ $item['persen'] }}%</strong></span>
-                                        <span>|</span>
-                                        <span><i class="fa-solid fa-wind"></i> <strong>{{ $item['status_bau'] }}</strong></span>
-                                    </div>
-                                </div>
-                                <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                                    
-                                    @if($item['persen'] >= 80)
-                                        <span class="badge-status badge-full">Penuh</span>
-                                    @endif
-
-                                    @if($item['bau'] >= 800)
-                                        <span class="badge-status badge-extreme">
-                                            <i class="fa-solid fa-triangle-exclamation"></i> Bau Nyengat
-                                        </span>
-                                    @elseif($item['persen'] < 80)
-                                        <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>
-                                    @endif
-
-                                    <small style="font-size: 10px; color: #94a3b8;">{{ $item['update'] }}</small>
-                                </div>
-                            </div>
-                            @endforeach
+                            <div id="location-list"></div>
                         </div>
                     </div>
                 </div>
@@ -203,7 +90,8 @@
 
     <script>
         const dataKantor = {!! json_encode($kantor) !!};
-        const dataDevices = {!! json_encode($devices) !!};
+        // Variabel ini dibuat let (bukan const) agar bisa diperbarui isinya oleh API
+        let dataDevices = {!! json_encode($devices) !!};
 
         const map = L.map('map').setView([dataKantor.lat, dataKantor.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -214,31 +102,90 @@
         });
         L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
 
-        dataDevices.forEach(d => {
-            const popupContent = `
-                <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
-                    <b style="font-size: 14px; color: #1e293b;">${d.id}</b><br>
-                    <span style="color: #64748b; font-size: 12px;">${d.lokasi}</span>
-                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #e2e8f0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="font-size: 12px;">Kapasitas:</span>
-                        <b style="font-size: 12px; color: ${d.persen >= 80 ? '#ef4444' : '#22c55e'};">${d.persen}%</b>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 12px;">Kondisi Bau:</span>
-                        <b style="font-size: 12px; color: ${d.bau >= 800 ? '#b91c1c' : (d.bau >= 400 ? '#f59e0b' : '#64748b')};">
-                            ${d.status_bau}
-                        </b>
-                    </div>
-                </div>
-            `;
-            L.marker([d.lat, d.lng]).addTo(map).bindPopup(popupContent);
-        });
-
+        // Group marker agar mudah dihapus dan digambar ulang tanpa me-reload peta
+        let deviceLayerGroup = L.layerGroup().addTo(map);
         let routingControl = null;
-        let ruteElements = []; // Menyimpan marker nomor dan garis rute manual
+        let ruteElements = [];
 
-        // Fungsi bantu untuk membersihkan garis dan marker rute sebelumnya
+        // Fungsi Render Marker ke Peta
+        function renderMarkers(devices) {
+            deviceLayerGroup.clearLayers(); // Bersihkan marker lama
+            devices.forEach(d => {
+                const popupContent = `
+                    <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
+                        <b style="font-size: 14px; color: #1e293b;">${d.id}</b><br>
+                        <span style="color: #64748b; font-size: 12px;">${d.lokasi}</span>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-size: 12px;">Kapasitas:</span>
+                            <b style="font-size: 12px; color: ${d.persen >= 80 ? '#ef4444' : '#22c55e'};">${d.persen}%</b>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 12px;">Kondisi Bau:</span>
+                            <b style="font-size: 12px; color: ${d.bau >= 800 ? '#b91c1c' : (d.bau >= 400 ? '#f59e0b' : '#64748b')};">
+                                ${d.status_bau}
+                            </b>
+                        </div>
+                    </div>
+                `;
+                L.marker([d.lat, d.lng]).addTo(deviceLayerGroup).bindPopup(popupContent);
+            });
+        }
+
+        // Fungsi Render List di Sidebar
+        function renderList(devices) {
+            let listHtml = '';
+            devices.forEach(item => {
+                let badges = '';
+                if(item.persen >= 80) {
+                    badges += `<span class="badge-status badge-full">Penuh</span> `;
+                }
+                if(item.bau >= 800) {
+                    badges += `<span class="badge-status badge-extreme"><i class="fa-solid fa-triangle-exclamation"></i> Bau Nyengat</span>`;
+                } else if(item.persen < 80) {
+                    badges += `<span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>`;
+                }
+
+                listHtml += `
+                <div class="location-card">
+                    <div onclick="fokusKeTitik(${item.lat}, ${item.lng})" style="flex: 1; cursor: pointer;">
+                        <span style="font-weight: 700; color: #1e293b;">${item.id}</span><br>
+                        <small style="color: #64748b; display: block; margin-bottom: 4px;">${item.lokasi}</small>
+                        <div style="font-size: 11px; color: #475569; display: flex; gap: 8px;">
+                            <span><i class="fa-solid fa-fill-drip"></i> <strong>${item.persen}%</strong></span>
+                            <span>|</span>
+                            <span><i class="fa-solid fa-wind"></i> <strong>${item.status_bau}</strong></span>
+                        </div>
+                    </div>
+                    <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+                        ${badges}
+                        <small style="font-size: 10px; color: #94a3b8;">${item.update}</small>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('location-list').innerHTML = listHtml;
+        }
+
+        // Panggil render pertama kali menggunakan data bawaan dari blade
+        renderMarkers(dataDevices);
+        renderList(dataDevices);
+
+        // FITUR REAL-TIME: Ambil data setiap 5 detik secara asynchronous
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/realtime-data');
+                const data = await response.json();
+                
+                // Timpa data global agar algoritma rute menggunakan data paling mutakhir
+                dataDevices = data.devices;
+
+                renderMarkers(dataDevices);
+                renderList(dataDevices);
+            } catch (error) {
+                console.error("Gagal sinkronisasi data:", error);
+            }
+        }, 5000);
+
         function bersihkanRuteManual() {
             if (ruteElements.length > 0) {
                 ruteElements.forEach(el => map.removeLayer(el));
@@ -269,18 +216,13 @@
         }
 
         function urutkanDenganNearestNeighbour() {
+            // Algoritma sekarang akan mengeksekusi dari dataDevices yang terus diupdate oleh Fetch API
             let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 800)); 
             let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
             let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
 
             if (unvisited.length === 0) {
-                Swal.fire({
-                    title: 'Status Aman',
-                    text: 'Semua bak sampah masih di bawah ambang batas penjemputan.',
-                    icon: 'info',
-                    confirmButtonColor: '#6366f1',
-                    confirmButtonText: 'Tutup'
-                });
+                Swal.fire({ title: 'Status Aman', text: 'Semua bak sampah masih di bawah ambang batas.', icon: 'info', confirmButtonColor: '#6366f1' });
                 return null;
             }
 
@@ -289,10 +231,7 @@
                 let jarakTerkecil = Infinity;
                 for (let i = 0; i < unvisited.length; i++) {
                     let jarak = hitungJarak(currentPos, unvisited[i]);
-                    if (jarak < jarakTerkecil) {
-                        jarakTerkecil = jarak;
-                        indexTerdekat = i;
-                    }
+                    if (jarak < jarakTerkecil) { jarakTerkecil = jarak; indexTerdekat = i; }
                 }
                 let titik = unvisited.splice(indexTerdekat, 1)[0];
                 ruteTerurut.push({nama: titik.lokasi, lat: titik.lat, lng: titik.lng});
@@ -314,7 +253,6 @@
                 let card = document.createElement('div');
                 card.className = 'step-card';
                 card.setAttribute('data-step', i + 1);
-                
                 let iconClass = i === 0 ? "fa-house-flag" : (i === waypointsData.length - 1 ? "fa-flag-checkered" : "fa-location-dot");
                 
                 card.innerHTML = `
@@ -335,17 +273,12 @@
             if (routingControl) map.removeControl(routingControl);
             bersihkanRuteManual();
 
-            // Kumpulan warna yang kontras untuk membedakan urutan (Merah, Oranye, Hijau, Cyan, Biru, Ungu, Pink)
             const arrayWarna = ['#ef4444', '#f97316', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
 
             routingControl = L.Routing.control({
                 waypoints: waypointsData.map(p => L.latLng(p.lat, p.lng)),
                 createMarker: function() { return null; },
-                lineOptions: { 
-                    addWaypoints: false,
-                    // Garis bawaan disembunyikan agar kita bisa menggambar garis beda warna
-                    styles: [{ color: 'transparent', weight: 0 }] 
-                }
+                lineOptions: { addWaypoints: false, styles: [{ color: 'transparent', weight: 0 }] }
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {
@@ -356,43 +289,24 @@
                     for (let i = 0; i < route.waypointIndices.length - 1; i++) {
                         let startIndex = route.waypointIndices[i];
                         let endIndex = route.waypointIndices[i+1];
-                        
-                        // Menarik koordinat rute khusus untuk segmen ini
                         let segmentCoords = coords.slice(startIndex, endIndex + 1);
-                        
-                        // Mengambil warna dari daftar array secara bergantian
                         let warnaSegmen = arrayWarna[i % arrayWarna.length];
 
-                        // Menggambar garis jalan dengan warna unik per urutan
-                        let polyline = L.polyline(segmentCoords, {
-                            color: warnaSegmen,
-                            weight: 6,
-                            opacity: 0.9
-                        }).addTo(map);
-                        
-                        // Letakkan angka tepat di tengah jalan per-segmen
+                        let polyline = L.polyline(segmentCoords, { color: warnaSegmen, weight: 6, opacity: 0.9 }).addTo(map);
                         let midIndex = Math.floor((startIndex + endIndex) / 2);
-                        let midLatLng = coords[midIndex];
-
-                        let marker = L.marker(midLatLng, {
+                        let marker = L.marker(coords[midIndex], {
                             icon: L.divIcon({
                                 className: 'custom-route-marker',
-                                // Warna marker angka disamakan dengan warna garis jalannya
                                 html: `<div style="background-color: ${warnaSegmen}; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${i + 1}</div>`,
                                 iconSize: [26, 26],
                                 iconAnchor: [13, 13]
                             })
                         }).addTo(map);
-                        
-                        let popupText = `Segmen ${i + 1}: Menuju ${waypointsData[i+1].nama}`;
-                        marker.bindTooltip(popupText, { direction: 'top', offset: [0, -10] });
-
-                        // Menyimpan ke array untuk dibersihkan saat refresh
+                        marker.bindTooltip(`Segmen ${i + 1}: Menuju ${waypointsData[i+1].nama}`, { direction: 'top', offset: [0, -10] });
                         ruteElements.push(polyline, marker);
                     }
                 }
             });
-
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
         }
