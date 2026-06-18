@@ -41,6 +41,18 @@
         .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .leaflet-routing-container { display: none; }
         .custom-route-marker { background: none; border: none; }
+
+        /* --- PERBAIKAN RESPONSIVE MOBILE --- */
+        @media screen and (max-width: 768px) {
+            body, html { height: auto; overflow: auto; } /* Izinkan scroll di mobile */
+            .main-content { overflow: visible; padding: 15px; height: auto; }
+            /* Ubah layout menyamping menjadi ke bawah (atas-bawah) */
+            .monitoring-layout { flex-direction: column; height: auto; overflow: visible; gap: 15px; }
+            /* Buat panel mengikuti lebar layar dan berikan tinggi spesifik */
+            .side-panel { width: 100%; height: 450px; flex: none; }
+            /* Paksa Peta agar muncul dengan tinggi 400px */
+            #map { width: 100%; height: 400px !important; flex: none; min-height: 400px; z-index: 1; }
+        }
     </style>
 </head>
 <body>
@@ -100,6 +112,11 @@
 
         const map = L.map('map').setView([dataKantor.lat, dataKantor.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Perbaikan render Leaflet map untuk mencegah bug peta abu-abu pada mobile
+        setTimeout(function () {
+            map.invalidateSize();
+        }, 500);
 
         const iconKantor = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/3299/3299935.png',
@@ -199,6 +216,10 @@
         }
 
         function fokusKeTitik(lat, lng) {
+            // Scroll ke area peta saat titik ditekan (Fitur untuk Mobile)
+            if(window.innerWidth <= 768) {
+                document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+            }
             map.flyTo([lat, lng], 17);
         }
 
@@ -215,6 +236,11 @@
             
             const bounds = L.latLngBounds([[lat1, lng1], [lat2, lng2]]);
             map.fitBounds(bounds.pad(0.5));
+
+            // Scroll map ke layar pada mobile
+            if(window.innerWidth <= 768) {
+                document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         function hitungJarak(p1, p2) {
@@ -326,6 +352,11 @@
             });
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
+
+            // Tambahan Mobile: Scroll otomatis ke peta setelah route terbuat
+            if(window.innerWidth <= 768) {
+                document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+            }
         }
     </script>
     <script>
