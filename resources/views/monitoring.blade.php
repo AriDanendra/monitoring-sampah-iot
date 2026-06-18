@@ -204,7 +204,8 @@
             routingControl = L.Routing.control({
                 waypoints: [L.latLng(lat1, lng1), L.latLng(lat2, lng2)],
                 createMarker: function() { return null; },
-                lineOptions: { styles: [{ color: '#3b82f6', weight: 6, opacity: 0.9 }] } 
+                show: false, // Menghilangkan panel instruksi LRM
+                lineOptions: { styles: [{ color: '#1a73e8', weight: 6, opacity: 0.9 }] } 
             }).addTo(map);
             
             const bounds = L.latLngBounds([[lat1, lng1], [lat2, lng2]]);
@@ -273,12 +274,18 @@
             if (routingControl) map.removeControl(routingControl);
             bersihkanRuteManual();
 
-            const arrayWarna = ['#ef4444', '#f97316', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+            // WARNA BIRU TUA STANDAR GOOGLE MAPS
+            const warnaRute = '#1a73e8';
 
             routingControl = L.Routing.control({
                 waypoints: waypointsData.map(p => L.latLng(p.lat, p.lng)),
                 createMarker: function() { return null; },
-                lineOptions: { addWaypoints: false, styles: [{ color: 'transparent', weight: 0 }] }
+                show: false, // Menyembunyikan panel instruksi putih bawaan LRM
+                lineOptions: { 
+                    addWaypoints: false, 
+                    // Menghilangkan garis LRM bawaan
+                    styles: [{ color: 'transparent', opacity: 0, weight: 0 }] 
+                }
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {
@@ -290,19 +297,24 @@
                         let startIndex = route.waypointIndices[i];
                         let endIndex = route.waypointIndices[i+1];
                         let segmentCoords = coords.slice(startIndex, endIndex + 1);
-                        let warnaSegmen = arrayWarna[i % arrayWarna.length];
 
-                        let polyline = L.polyline(segmentCoords, { color: warnaSegmen, weight: 6, opacity: 0.9 }).addTo(map);
-                        let midIndex = Math.floor((startIndex + endIndex) / 2);
-                        let marker = L.marker(coords[midIndex], {
+                        // Garis dengan satu warna biru Google Maps
+                        let polyline = L.polyline(segmentCoords, { color: warnaRute, weight: 6, opacity: 0.9 }).addTo(map);
+                        
+                        let titikTujuan = waypointsData[i + 1];
+                        
+                        let marker = L.marker([titikTujuan.lat, titikTujuan.lng], {
                             icon: L.divIcon({
                                 className: 'custom-route-marker',
-                                html: `<div style="background-color: ${warnaSegmen}; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${i + 1}</div>`,
+                                html: `<div style="background-color: ${warnaRute}; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${i + 1}</div>`,
                                 iconSize: [26, 26],
-                                iconAnchor: [13, 13]
-                            })
+                                iconAnchor: [13, 42] 
+                            }),
+                            zIndexOffset: 1000 - i 
                         }).addTo(map);
-                        marker.bindTooltip(`Segmen ${i + 1}: Menuju ${waypointsData[i+1].nama}`, { direction: 'top', offset: [0, -10] });
+                        
+                        marker.bindTooltip(`Urutan ${i + 1}: ${titikTujuan.nama}`, { direction: 'top', offset: [0, -10] });
+
                         ruteElements.push(polyline, marker);
                     }
                 }
