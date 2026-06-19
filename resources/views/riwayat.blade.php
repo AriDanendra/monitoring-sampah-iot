@@ -43,7 +43,7 @@
                     <div class="section-header">
                         <h3>Log Aktivitas Terakhir</h3>
                         <div class="header-actions" style="display: flex; gap: 10px;">
-                            @if($logs->count() > 0)
+                            @if($logs->count() > 0 && !request('search') && !request('tanggal'))
                                 <form action="{{ route('hapus-semua-riwayat') }}" method="POST" id="formHapusSemua">
                                     @csrf
                                     <button type="button" class="btn-refresh" style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;" onclick="konfirmasiHapusSemua()">
@@ -52,12 +52,39 @@
                                 </form>
                             @endif
 
-                            <button class="btn-refresh" onclick="location.reload();">
+                            <button class="btn-refresh" onclick="window.location.href='{{ url()->current() }}'">
                                 <i class="fa-solid fa-rotate"></i> Refresh Log
                             </button>
                         </div>
                     </div>
 
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                        <form action="{{ url()->current() }}" method="GET" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                            
+                            <div style="flex: 1; min-width: 200px;">
+                                <label for="search" style="display: block; font-size: 14px; font-weight: 500; color: #475569; margin-bottom: 8px;">Cari Lokasi / ID Perangkat</label>
+                                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="Ketik lokasi atau ID..." 
+                                       style="width: 100%; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: inherit; box-sizing: border-box;">
+                            </div>
+
+                            <div style="min-width: 150px;">
+                                <label for="tanggal" style="display: block; font-size: 14px; font-weight: 500; color: #475569; margin-bottom: 8px;">Tanggal Pengangkutan</label>
+                                <input type="date" name="tanggal" id="tanggal" value="{{ request('tanggal') }}" 
+                                       style="width: 100%; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: inherit; box-sizing: border-box;">
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; font-family: inherit; transition: background 0.2s;">
+                                    <i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Terapkan
+                                </button>
+                                @if(request('search') || request('tanggal'))
+                                    <a href="{{ url()->current() }}" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; font-family: inherit; transition: background 0.2s; display: inline-flex; align-items: center;">
+                                        <i class="fa-solid fa-xmark" style="margin-right: 5px;"></i> Reset Filter
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
                     <div class="table-responsive">
                         <table class="modern-table">
                             <thead>
@@ -96,7 +123,11 @@
                                 <tr>
                                     <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
                                         <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
-                                        Belum ada data riwayat pengangkutan.
+                                        @if(request('search') || request('tanggal'))
+                                            Data riwayat dengan filter tersebut tidak ditemukan.
+                                        @else
+                                            Belum ada data riwayat pengangkutan.
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforelse

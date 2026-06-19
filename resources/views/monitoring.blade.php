@@ -42,15 +42,11 @@
         .leaflet-routing-container { display: none; }
         .custom-route-marker { background: none; border: none; }
 
-        /* --- PERBAIKAN RESPONSIVE MOBILE --- */
         @media screen and (max-width: 768px) {
-            body, html { height: auto; overflow: auto; } /* Izinkan scroll di mobile */
+            body, html { height: auto; overflow: auto; } 
             .main-content { overflow: visible; padding: 15px; height: auto; }
-            /* Ubah layout menyamping menjadi ke bawah (atas-bawah) */
             .monitoring-layout { flex-direction: column; height: auto; overflow: visible; gap: 15px; }
-            /* Buat panel mengikuti lebar layar dan berikan tinggi spesifik */
             .side-panel { width: 100%; height: 450px; flex: none; }
-            /* Paksa Peta agar muncul dengan tinggi 400px */
             #map { width: 100%; height: 400px !important; flex: none; min-height: 400px; z-index: 1; }
         }
     </style>
@@ -107,13 +103,14 @@
 
     <script>
         const dataKantor = {!! json_encode($kantor) !!};
-        // Variabel ini dibuat let (bukan const) agar bisa diperbarui isinya oleh API
         let dataDevices = {!! json_encode($devices) !!};
+        
+        // Menerima Array Rute Optimal yang sudah dihitung oleh Laravel Backend
+        let dataRuteOptimal = {!! json_encode($ruteOptimal ?? []) !!};
 
         const map = L.map('map').setView([dataKantor.lat, dataKantor.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Perbaikan render Leaflet map untuk mencegah bug peta abu-abu pada mobile
         setTimeout(function () {
             map.invalidateSize();
         }, 500);
@@ -124,14 +121,12 @@
         });
         L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
 
-        // Group marker agar mudah dihapus dan digambar ulang tanpa me-reload peta
         let deviceLayerGroup = L.layerGroup().addTo(map);
         let routingControl = null;
         let ruteElements = [];
 
-        // Fungsi Render Marker ke Peta
         function renderMarkers(devices) {
-            deviceLayerGroup.clearLayers(); // Bersihkan marker lama
+            deviceLayerGroup.clearLayers(); 
             devices.forEach(d => {
                 const popupContent = `
                     <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
@@ -154,7 +149,6 @@
             });
         }
 
-        // Fungsi Render List di Sidebar
         function renderList(devices) {
             let listHtml = '';
             devices.forEach(item => {
@@ -188,18 +182,16 @@
             document.getElementById('location-list').innerHTML = listHtml;
         }
 
-        // Panggil render pertama kali menggunakan data bawaan dari blade
         renderMarkers(dataDevices);
         renderList(dataDevices);
 
-        // FITUR REAL-TIME: Ambil data setiap 5 detik secara asynchronous
         setInterval(async () => {
             try {
                 const response = await fetch('/api/realtime-data');
                 const data = await response.json();
                 
-                // Timpa data global agar algoritma rute menggunakan data paling mutakhir
                 dataDevices = data.devices;
+                dataRuteOptimal = data.rute_optimal; // Update rute jika ada perubahan kondisi sampah
 
                 renderMarkers(dataDevices);
                 renderList(dataDevices);
@@ -216,7 +208,6 @@
         }
 
         function fokusKeTitik(lat, lng) {
-            // Scroll ke area peta saat titik ditekan (Fitur untuk Mobile)
             if(window.innerWidth <= 768) {
                 document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
             }
@@ -230,52 +221,26 @@
             routingControl = L.Routing.control({
                 waypoints: [L.latLng(lat1, lng1), L.latLng(lat2, lng2)],
                 createMarker: function() { return null; },
-                show: false, // Menghilangkan panel instruksi LRM
+                show: false, 
                 lineOptions: { styles: [{ color: '#1a73e8', weight: 6, opacity: 0.9 }] } 
             }).addTo(map);
             
             const bounds = L.latLngBounds([[lat1, lng1], [lat2, lng2]]);
             map.fitBounds(bounds.pad(0.5));
 
-            // Scroll map ke layar pada mobile
             if(window.innerWidth <= 768) {
                 document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
             }
         }
 
-        function hitungJarak(p1, p2) {
-            return Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2));
-        }
-
-        function urutkanDenganNearestNeighbour() {
-            // Algoritma sekarang akan mengeksekusi dari dataDevices yang terus diupdate oleh Fetch API
-            let unvisited = dataDevices.filter(d => d.persen >= 80 || (d.bau && d.bau >= 800)); 
-            let currentPos = { lat: dataKantor.lat, lng: dataKantor.lng }; 
-            let ruteTerurut = [{nama: "Depot TPS", lat: dataKantor.lat, lng: dataKantor.lng}];
-
-            if (unvisited.length === 0) {
-                Swal.fire({ title: 'Status Aman', text: 'Semua bak sampah masih di bawah ambang batas.', icon: 'info', confirmButtonColor: '#6366f1' });
-                return null;
-            }
-
-            while (unvisited.length > 0) {
-                let indexTerdekat = -1;
-                let jarakTerkecil = Infinity;
-                for (let i = 0; i < unvisited.length; i++) {
-                    let jarak = hitungJarak(currentPos, unvisited[i]);
-                    if (jarak < jarakTerkecil) { jarakTerkecil = jarak; indexTerdekat = i; }
-                }
-                let titik = unvisited.splice(indexTerdekat, 1)[0];
-                ruteTerurut.push({nama: titik.lokasi, lat: titik.lat, lng: titik.lng});
-                currentPos = { lat: titik.lat, lng: titik.lng }; 
-            }
-            ruteTerurut.push({nama: "Depot TPS (Selesai)", lat: dataKantor.lat, lng: dataKantor.lng});
-            return ruteTerurut;
-        }
-
         function buatRuteKeliling() {
-            const waypointsData = urutkanDenganNearestNeighbour();
-            if (!waypointsData) return;
+            // Menggunakan data rute yang di-generate dari Laravel Controller!
+            const waypointsData = dataRuteOptimal;
+
+            if (!waypointsData || waypointsData.length <= 1) {
+                Swal.fire({ title: 'Status Aman', text: 'Semua bak sampah masih di bawah ambang batas.', icon: 'info', confirmButtonColor: '#6366f1' });
+                return;
+            }
 
             document.getElementById('navigation-summary').style.display = 'block';
             const instructionContainer = document.getElementById('instruction-steps');
@@ -291,7 +256,7 @@
                     <div class="step-icon"><i class="fa-solid ${iconClass}"></i></div>
                     <div class="step-info">
                         <span class="step-destination">${point.nama}</span>
-                        <span class="step-details">Lihat rute</span>
+                        <span class="step-details">Lihat rute pengangkutan</span>
                     </div>
                 `;
 
@@ -305,16 +270,14 @@
             if (routingControl) map.removeControl(routingControl);
             bersihkanRuteManual();
 
-            // WARNA BIRU TUA STANDAR GOOGLE MAPS
             const warnaRute = '#1a73e8';
 
             routingControl = L.Routing.control({
                 waypoints: waypointsData.map(p => L.latLng(p.lat, p.lng)),
                 createMarker: function() { return null; },
-                show: false, // Menyembunyikan panel instruksi putih bawaan LRM
+                show: false, 
                 lineOptions: { 
                     addWaypoints: false, 
-                    // Menghilangkan garis LRM bawaan
                     styles: [{ color: 'transparent', opacity: 0, weight: 0 }] 
                 }
             }).addTo(map);
@@ -329,7 +292,6 @@
                         let endIndex = route.waypointIndices[i+1];
                         let segmentCoords = coords.slice(startIndex, endIndex + 1);
 
-                        // Garis dengan satu warna biru Google Maps
                         let polyline = L.polyline(segmentCoords, { color: warnaRute, weight: 6, opacity: 0.9 }).addTo(map);
                         
                         let titikTujuan = waypointsData[i + 1];
@@ -353,7 +315,6 @@
             const bounds = L.latLngBounds(waypointsData.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds.pad(0.3));
 
-            // Tambahan Mobile: Scroll otomatis ke peta setelah route terbuat
             if(window.innerWidth <= 768) {
                 document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
             }
