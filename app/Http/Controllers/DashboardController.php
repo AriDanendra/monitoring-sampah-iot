@@ -133,20 +133,41 @@ class DashboardController extends Controller
 
     private function getDeviceData()
     {
+        // Titik Asli dari ThingsBoard
         $devices = [
-            $this->formatDeviceData($this->deviceIdTR01, '#TR-01', 'Grand Sulawesi Parepare', -4.006904852098234, 119.66253093102463),
-            $this->formatDeviceData($this->deviceIdTR02, '#TR-02', 'Perumahan Pare Town House', -4.010893730077395, 119.63298928262212),
+            $this->formatDeviceData($this->deviceIdTR01, '#TR-01', 'Kantor Kelurahan Galung Maloang', -4.017858, 119.662751),
+            $this->formatDeviceData($this->deviceIdTR02, '#TR-02', 'Kampus 2 ITH Parepare', -4.027225, 119.630519),
         ];
 
+        // 20 Titik Dummy - Disebar 5 titik di 4 Kecamatan Berbeda
         $dummyList = [
-            ['Pasar Senggol', -4.007292, 119.621973, 95, 900],
-            ['Monumen Habibie', -4.012640, 119.6220213, 45, 300],
-            ['Pasar Lakessi', -4.004092, 119.627335, 85, 450],
-            ['Polsek Soreang', -3.990735, 119.651813, 20, 100],
-            ['RS dr. Hasri Ainun Habibie', -4.048255, 119.621842, 90, 850],
-            ['Islamic Center', -4.015800, 119.623808, 30, 150],
-            ['Puskesmas Lompoe', -4.015252, 119.657346, 40, 850],
-            ['Kantor Camat', -4.022163, 119.656651, 80, 200],
+            // --- 1. KECAMATAN UJUNG ---
+            ['Pasar Senggol ', -4.007292, 119.621973, 95, 900],
+            ['Monumen Habibie Ainun ', -4.012640, 119.622021, 45, 300],
+            ['Pelabuhan Nusantara ', -4.012841, 119.620385, 85, 400],
+            ['Dinas Pendidikan Kota Parepare ', -4.008670, 119.625532, 60, 200],
+            ['Masjid Raya Parepare', -4.009462, 119.621925, 80, 810], 
+
+            // --- 2. KECAMATAN SOREANG ---
+            ['Pasar Lakessi ', -4.004092, 119.627335, 88, 450],
+            ['Polsek Soreang ', -3.990735, 119.651813, 20, 100],
+            ['MAN 1 Parepare ', -3.983912, 119.640791, 40, 150],
+            ['Kebun Raya Jompie Parepare', -3.99705, 119.64098, 15, 50],
+            ['UPTD SD Negeri 23 Parepare', -4.003799, 119.633485, 92, 850],
+
+            // --- 3. KECAMATAN BACUKIKI BARAT ---
+            ['RS dr. Hasri Ainun Habibie ', -4.048255, 119.621842, 90, 850], 
+            ['Islamic Center ', -4.015792, 119.623808, 30, 150],
+            ['RSUD Andi Makassau',-4.03525, 119.63425, 50, 200],
+            ['Kantor Kecamatan Bacukiki Barat', -4.042680, 119.627396, 75, 600],
+            ['SMAN 2 Parepare', -4.038579, 119.627541, 82, 300],
+
+            // --- 4. KECAMATAN BACUKIKI ---
+            ['Puskesmas Lompoe ', -4.015252, 119.657346, 40, 850],
+            ['Perumahan Grand Sulawesi ', -4.00746, 119.66094, 25, 100],
+            ['UPTD SMP Negeri 8 Parepare', -4.015911, 119.647229, 85, 750],
+            ['Kantor Kelurahan Lompoe', -4.017151, 119.651037, 65, 400],
+            ['Lapas Kelas IIA Parepare', -4.003751, 119.666948, 95, 900], 
         ];
 
         $idCounter = 3;
@@ -209,7 +230,7 @@ class DashboardController extends Controller
                 'nama' => $titikTerdekat['lokasi'],
                 'lat' => $titikTerdekat['lat'],
                 'lng' => $titikTerdekat['lng'],
-                'jarak_ke_titik_km' => round($jarakTerkecil, 2) // Anda bisa pakai ini untuk mencetak log rute nantinya
+                'jarak_ke_titik_km' => round($jarakTerkecil, 2) 
             ];
 
             // Pindah posisi ke titik yang baru saja dipilih
@@ -320,7 +341,7 @@ class DashboardController extends Controller
         return response()->json([
             'devices' => $devices,
             'kantor' => $kantor,
-            'rute_optimal' => $ruteOptimal, // <-- Mengirim rute ke frontend
+            'rute_optimal' => $ruteOptimal, 
             'totalLokasi' => $totalLokasi,
             'titikPenuh' => $titikPenuh,
             'perangkatAktif' => $perangkatAktif

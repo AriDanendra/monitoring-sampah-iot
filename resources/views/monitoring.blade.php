@@ -16,12 +16,12 @@
         .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow: hidden; }
         .monitoring-layout { display: flex; gap: 20px; flex: 1; margin-top: 15px; min-height: 0; }
         .side-panel { width: 380px; background: white; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); height: 100%; overflow: hidden; }
-        .panel-header { padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 10px; }
+        .panel-header { padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 10px; }
         .panel-body { flex: 1; padding: 0 20px 20px 20px; overflow-y: auto; }
         .panel-body::-webkit-scrollbar { width: 5px; }
         .panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         #map { flex: 1; border-radius: 15px; border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 1; height: 100%; }
-        .btn-all-route { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; transition: 0.3s; }
+        .btn-all-route { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
         .btn-all-route:hover { background: #16a34a; transform: translateY(-2px); }
         .section-title { font-size: 15px; margin: 25px 0 15px; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .timeline-container { border-left: 2px dashed #cbd5e1; margin-left: 15px; padding-left: 25px; position: relative; }
@@ -41,6 +41,9 @@
         .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .leaflet-routing-container { display: none; }
         .custom-route-marker { background: none; border: none; }
+        
+        /* Tambahan style untuk info jarak */
+        #total-distance-info { font-size: 14px; color: #1a73e8; font-weight: 700; background: #eff6ff; padding: 10px; border-radius: 8px; text-align: center; border: 1px dashed #bfdbfe; }
 
         @media screen and (max-width: 768px) {
             body, html { height: auto; overflow: auto; } 
@@ -74,6 +77,7 @@
                         <button class="btn-all-route" onclick="buatRuteKeliling()">
                             <i class="fa-solid fa-truck-fast"></i> Mulai Rute
                         </button>
+                        <div id="total-distance-info" style="display: none;"></div>
                     </div>
 
                     <div class="panel-body">
@@ -224,6 +228,14 @@
                 show: false, 
                 lineOptions: { styles: [{ color: '#1a73e8', weight: 6, opacity: 0.9 }] } 
             }).addTo(map);
+
+            // Menambahkan pendeteksi jarak untuk segmen satuan (opsional)
+            routingControl.on('routesfound', function(e) {
+                const route = e.routes[0];
+                const totalJarakKm = (route.summary.totalDistance / 1000).toFixed(2);
+                document.getElementById('total-distance-info').innerHTML = `<i class="fa-solid fa-road"></i> Jarak Segmen: ${totalJarakKm} KM`;
+                document.getElementById('total-distance-info').style.display = 'block';
+            });
             
             const bounds = L.latLngBounds([[lat1, lng1], [lat2, lng2]]);
             map.fitBounds(bounds.pad(0.5));
@@ -239,6 +251,7 @@
 
             if (!waypointsData || waypointsData.length <= 1) {
                 Swal.fire({ title: 'Status Aman', text: 'Semua bak sampah masih di bawah ambang batas.', icon: 'info', confirmButtonColor: '#6366f1' });
+                document.getElementById('total-distance-info').style.display = 'none';
                 return;
             }
 
@@ -282,9 +295,19 @@
                 }
             }).addTo(map);
 
+            // ------ BAGIAN INI YANG DITAMBAHKAN UNTUK MENGAMBIL JARAK --------
             routingControl.on('routesfound', function(e) {
                 const route = e.routes[0];
                 const coords = route.coordinates;
+                
+                // Menghitung dan menampilkan jarak
+                const totalJarakKm = (route.summary.totalDistance / 1000).toFixed(2);
+                console.log('Total Jarak Rute (Estimasi): ' + totalJarakKm + ' km');
+                
+                const distanceInfoEl = document.getElementById('total-distance-info');
+                distanceInfoEl.innerHTML = `<i class="fa-solid fa-road"></i> Estimasi Total Jarak: ${totalJarakKm} KM`;
+                distanceInfoEl.style.display = 'block';
+                // ---------------------------------------------------------------
                 
                 if (route.waypointIndices) {
                     for (let i = 0; i < route.waypointIndices.length - 1; i++) {
