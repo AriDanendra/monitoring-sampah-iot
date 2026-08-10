@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('style.css') }}">
     <style>
-        .bau-normal { color: #10b981; font-weight: 600; } 
-        .bau-bahaya { color: #ef4444; font-weight: 700; } 
+        /* Indikator Bau & Kapasitas (Sesuai Threshold Skripsi) */
+        .status-aman { color: #10b981; font-weight: 600; } 
+        .status-bahaya { color: #ef4444; font-weight: 700; } 
     </style>
 </head>
 <body>
@@ -83,14 +84,25 @@
                                     <tr>
                                         <td>{{ $item['id'] }}</td>
                                         <td><strong>{{ $item['lokasi'] }}</strong></td>
-                                        <td><span style="font-weight: 600;">{{ $item['persen'] }}%</span></td>
+                                        
+                                        <!-- Logika Blade untuk Kapasitas (Ambang Batas 80%) -->
                                         <td>
-                                            @if($item['bau'] >= 800)
-                                                <span class="bau-bahaya"><i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat ({{ $item['bau'] }} PPM)</span>
+                                            @if($item['persen'] >= 80)
+                                                <span class="status-bahaya"><i class="fa-solid fa-triangle-exclamation"></i> {{ $item['persen'] }}% (Penuh)</span>
                                             @else
-                                                <span class="bau-normal"><i class="fa-solid fa-circle-check"></i> Aman ({{ $item['bau'] }} PPM)</span>
+                                                <span class="status-aman"><i class="fa-solid fa-check"></i> {{ $item['persen'] }}% (Aman)</span>
                                             @endif
                                         </td>
+                                        
+                                        <!-- Logika Blade untuk Tingkat Bau (Ambang Batas 800 PPM) -->
+                                        <td>
+                                            @if($item['bau'] >= 800)
+                                                <span class="status-bahaya"><i class="fa-solid fa-biohazard"></i> Bau Menyengat ({{ $item['bau'] }} PPM)</span>
+                                            @else
+                                                <span class="status-aman"><i class="fa-solid fa-leaf"></i> Aman ({{ $item['bau'] }} PPM)</span>
+                                            @endif
+                                        </td>
+
                                         <td><span class="status-badge {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                                         <td>{{ $item['update'] }}</td>
                                     </tr>
@@ -116,10 +128,10 @@
         }
 
         mobileMenuBtn.addEventListener('click', toggleSidebar);
-        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', toggleSidebar);
 
-        // Realtime Fetch Script yang sudah ada sebelumnya
+        // Realtime Fetch Script
         setInterval(async () => {
             try {
                 const response = await fetch('/api/realtime-data');
@@ -131,9 +143,16 @@
 
                 let tbody = '';
                 data.devices.forEach(item => {
+                    
+                    // Logika JS untuk Indikator Bau (Ambang Batas 800 PPM)
                     let bauHtml = item.bau >= 800
-                        ? `<span class="bau-bahaya"><i class="fa-solid fa-circle-exclamation"></i> Bau Nyengat (${item.bau} PPM)</span>`
-                        : `<span class="bau-normal"><i class="fa-solid fa-circle-check"></i> Aman (${item.bau} PPM)</span>`;
+                        ? `<span class="status-bahaya"><i class="fa-solid fa-biohazard"></i> Bau Menyengat (${item.bau} PPM)</span>`
+                        : `<span class="status-aman"><i class="fa-solid fa-leaf"></i> Aman (${item.bau} PPM)</span>`;
+
+                    // Logika JS untuk Indikator Kapasitas (Ambang Batas 80%)
+                    let kapasitasHtml = item.persen >= 80
+                        ? `<span class="status-bahaya"><i class="fa-solid fa-triangle-exclamation"></i> ${item.persen}% (Penuh)</span>`
+                        : `<span class="status-aman"><i class="fa-solid fa-check"></i> ${item.persen}% (Aman)</span>`;
                     
                     let statusCap = item.status.charAt(0).toUpperCase() + item.status.slice(1);
 
@@ -141,7 +160,7 @@
                     <tr>
                         <td>${item.id}</td>
                         <td><strong>${item.lokasi}</strong></td>
-                        <td><span style="font-weight: 600;">${item.persen}%</span></td>
+                        <td>${kapasitasHtml}</td>
                         <td>${bauHtml}</td>
                         <td><span class="status-badge ${item.status}">${statusCap}</span></td>
                         <td>${item.update}</td>

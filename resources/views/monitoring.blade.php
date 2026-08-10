@@ -35,14 +35,13 @@
         .step-card.start::before { background: #22c55e; }
         .step-card.end::before { background: #ef4444; }
         .location-card { padding: 12px; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .location-card:hover { background: #f8fafc; border-color: #6366f1; }
-        .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .location-card:hover { filter: brightness(0.96); }
+        .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
         .badge-full { background: #fee2e2; color: #ef4444; }
         .badge-extreme { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .leaflet-routing-container { display: none; }
         .custom-route-marker { background: none; border: none; }
         
-        /* Tambahan style untuk info jarak */
         #total-distance-info { font-size: 14px; color: #1a73e8; font-weight: 700; background: #eff6ff; padding: 10px; border-radius: 8px; text-align: center; border: 1px dashed #bfdbfe; }
 
         @media screen and (max-width: 768px) {
@@ -108,8 +107,6 @@
     <script>
         const dataKantor = {!! json_encode($kantor) !!};
         let dataDevices = {!! json_encode($devices) !!};
-        
-        // Menerima Array Rute Optimal yang sudah dihitung oleh Laravel Backend
         let dataRuteOptimal = {!! json_encode($ruteOptimal ?? []) !!};
 
         const map = L.map('map').setView([dataKantor.lat, dataKantor.lng], 13);
@@ -123,15 +120,22 @@
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/3299/3299935.png',
             iconSize: [40, 40]
         });
-        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("TPS");
+        L.marker([dataKantor.lat, dataKantor.lng], {icon: iconKantor}).addTo(map).bindPopup("Titik Awal (Kantor/TPA)");
 
         let deviceLayerGroup = L.layerGroup().addTo(map);
         let routingControl = null;
         let ruteElements = [];
+        
+        // Array untuk menyimpan history notifikasi agar tidak muncul berulang kali
+        let alertedDevices = []; 
 
         function renderMarkers(devices) {
             deviceLayerGroup.clearLayers(); 
             devices.forEach(d => {
+                // Logika warna untuk persentase dan bau di popup peta disesuaikan dengan threshold skripsi
+                let colorKapasitas = d.persen >= 80 ? '#ef4444' : '#22c55e';
+                let colorBau = d.bau >= 800 ? '#b91c1c' : '#22c55e';
+                
                 const popupContent = `
                     <div style="font-family: 'Inter', sans-serif; min-width: 150px;">
                         <b style="font-size: 14px; color: #1e293b;">${d.id}</b><br>
@@ -139,11 +143,11 @@
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid #e2e8f0;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span style="font-size: 12px;">Kapasitas:</span>
-                            <b style="font-size: 12px; color: ${d.persen >= 80 ? '#ef4444' : '#22c55e'};">${d.persen}%</b>
+                            <b style="font-size: 12px; color: ${colorKapasitas};">${d.persen}%</b>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span style="font-size: 12px;">Kondisi Bau:</span>
-                            <b style="font-size: 12px; color: ${d.bau >= 800 ? '#b91c1c' : (d.bau >= 400 ? '#f59e0b' : '#64748b')};">
+                            <b style="font-size: 12px; color: ${colorBau};">
                                 ${d.status_bau}
                             </b>
                         </div>
@@ -157,19 +161,31 @@
             let listHtml = '';
             devices.forEach(item => {
                 let badges = '';
-                if(item.persen >= 80) {
-                    badges += `<span class="badge-status badge-full">Penuh</span> `;
+                let cardStyle = '';
+                let capacityAlert = '';
+
+                // 1. Peringkat Peringatan Kapasitas (Ambang Batas 80%)
+                if (item.persen >= 80) {
+                    badges += `<span class="badge-status badge-full"><i class="fa-solid fa-triangle-exclamation"></i> Kapasitas Penuh</span> `;
+                    cardStyle = 'border-left: 5px solid #ef4444; background-color: #fef2f2;'; // Background Merah Muda
+                    capacityAlert = '🚨';
+                } else {
+                    badges += `<span class="badge-status" style="background: #dcfce7; color: #166534;"><i class="fa-solid fa-check"></i> Kapasitas Aman</span> `;
+                    cardStyle = 'border-left: 5px solid #22c55e; background-color: #ffffff;'; // Normal
+                    capacityAlert = '✔️';
                 }
-                if(item.bau >= 800) {
-                    badges += `<span class="badge-status badge-extreme"><i class="fa-solid fa-triangle-exclamation"></i> Bau Nyengat</span>`;
-                } else if(item.persen < 80) {
-                    badges += `<span class="badge-status" style="background: #f1f5f9; color: #64748b;">Aman</span>`;
+
+                // 2. Peringkat Peringatan Tingkat Bau (Ambang Batas 800 PPM)
+                if (item.bau >= 800) {
+                    badges += `<span class="badge-status badge-extreme"><i class="fa-solid fa-biohazard"></i> Bau Nyengat!</span>`;
+                } else {
+                    badges += `<span class="badge-status" style="background: #e0f2fe; color: #075985;"><i class="fa-solid fa-leaf"></i> Udara Bersih</span>`;
                 }
 
                 listHtml += `
-                <div class="location-card">
+                <div class="location-card" style="${cardStyle}">
                     <div onclick="fokusKeTitik(${item.lat}, ${item.lng})" style="flex: 1; cursor: pointer;">
-                        <span style="font-weight: 700; color: #1e293b;">${item.id}</span><br>
+                        <span style="font-weight: 700; color: #1e293b;">${capacityAlert} ${item.id}</span><br>
                         <small style="color: #64748b; display: block; margin-bottom: 4px;">${item.lokasi}</small>
                         <div style="font-size: 11px; color: #475569; display: flex; gap: 8px;">
                             <span><i class="fa-solid fa-fill-drip"></i> <strong>${item.persen}%</strong></span>
@@ -177,7 +193,7 @@
                             <span><i class="fa-solid fa-wind"></i> <strong>${item.status_bau}</strong></span>
                         </div>
                     </div>
-                    <div style="text-align: right; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+                    <div style="text-align: right; display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
                         ${badges}
                         <small style="font-size: 10px; color: #94a3b8;">${item.update}</small>
                     </div>
@@ -195,10 +211,33 @@
                 const data = await response.json();
                 
                 dataDevices = data.devices;
-                dataRuteOptimal = data.rute_optimal; // Update rute jika ada perubahan kondisi sampah
+                dataRuteOptimal = data.rute_optimal; 
 
                 renderMarkers(dataDevices);
                 renderList(dataDevices);
+
+                // Toast Notifikasi jika ada bak sampah yang menyentuh batas kritis (Penuh >= 80% / Bau >= 800 PPM)
+                dataDevices.forEach(d => {
+                    const isCritical = d.persen >= 80 || d.bau >= 800;
+                    
+                    if(isCritical && !alertedDevices.includes(d.id)) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'warning',
+                            title: `Peringatan Kritis!`,
+                            text: `${d.id} membutuhkan pengangkutan. Kapasitas: ${d.persen}%`,
+                            showConfirmButton: false,
+                            timer: 6000,
+                            timerProgressBar: true,
+                        });
+                        alertedDevices.push(d.id);
+                    } else if (!isCritical) {
+                        // Hapus dari daftar jika sudah aman agar bisa dinotifkan kembali nanti
+                        alertedDevices = alertedDevices.filter(id => id !== d.id);
+                    }
+                });
+
             } catch (error) {
                 console.error("Gagal sinkronisasi data:", error);
             }
@@ -229,7 +268,6 @@
                 lineOptions: { styles: [{ color: '#1a73e8', weight: 6, opacity: 0.9 }] } 
             }).addTo(map);
 
-            // Menambahkan pendeteksi jarak untuk segmen satuan (opsional)
             routingControl.on('routesfound', function(e) {
                 const route = e.routes[0];
                 const totalJarakKm = (route.summary.totalDistance / 1000).toFixed(2);
@@ -246,7 +284,6 @@
         }
 
         function buatRuteKeliling() {
-            // Menggunakan data rute yang di-generate dari Laravel Controller!
             const waypointsData = dataRuteOptimal;
 
             if (!waypointsData || waypointsData.length <= 1) {
@@ -295,19 +332,16 @@
                 }
             }).addTo(map);
 
-            // ------ BAGIAN INI YANG DITAMBAHKAN UNTUK MENGAMBIL JARAK --------
             routingControl.on('routesfound', function(e) {
                 const route = e.routes[0];
                 const coords = route.coordinates;
                 
-                // Menghitung dan menampilkan jarak
                 const totalJarakKm = (route.summary.totalDistance / 1000).toFixed(2);
                 console.log('Total Jarak Rute (Estimasi): ' + totalJarakKm + ' km');
                 
                 const distanceInfoEl = document.getElementById('total-distance-info');
                 distanceInfoEl.innerHTML = `<i class="fa-solid fa-road"></i> Estimasi Total Jarak: ${totalJarakKm} KM`;
                 distanceInfoEl.style.display = 'block';
-                // ---------------------------------------------------------------
                 
                 if (route.waypointIndices) {
                     for (let i = 0; i < route.waypointIndices.length - 1; i++) {

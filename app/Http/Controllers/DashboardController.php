@@ -81,7 +81,8 @@ class DashboardController extends Controller
             $lastActivity = $lastTs / 1000;
             $diffInSeconds = time() - $lastActivity;
 
-            if ($diffInSeconds < 300) {
+            // Diubah menjadi 60 detik (1 menit)
+            if ($diffInSeconds < 120) {
                 $status = 'online';
                 $update = 'Baru saja';
             } else {
@@ -124,8 +125,8 @@ class DashboardController extends Controller
             'persen' => $persen,
             'bau' => $bau,
             'status_bau' => $statusBau,
-            'status' => 'online', 
-            'update' => 'Baru saja',
+            'status' => 'offline',            // Diubah menjadi offline
+            'update' => 'Tidak ada data',     // Teks disesuaikan
             'lat' => $lat,
             'lng' => $lng
         ];
@@ -141,33 +142,33 @@ class DashboardController extends Controller
 
         // 20 Titik Dummy - Disebar 5 titik di 4 Kecamatan Berbeda
         $dummyList = [
-            // --- 1. KECAMATAN UJUNG ---
-            ['Pasar Senggol ', -4.007292, 119.621973, 95, 900],
-            ['Monumen Habibie Ainun ', -4.012640, 119.622021, 45, 300],
-            ['Pelabuhan Nusantara ', -4.012841, 119.620385, 85, 400],
-            ['Dinas Pendidikan Kota Parepare ', -4.008670, 119.625532, 60, 200],
-            ['Masjid Raya Parepare', -4.009462, 119.621925, 80, 810], 
+            // KECAMATAN UJUNG
+            ['Pasar Senggol', -4.007292, 119.621973, 45, 300],          // TR-03
+            ['Monumen Habibie Ainun', -4.012640, 119.622021, 50, 250],  // TR-04
+            ['Pelabuhan Nusantara', -4.012841, 119.620385, 55, 400],    // TR-05
+            ['Dinas Pendidikan Kota Parepare', -4.008670, 119.625532, 35, 200], // TR-06
+            ['Masjid Raya Parepare', -4.009462, 119.621925, 90, 850],   // TR-07 ✅
 
-            // --- 2. KECAMATAN SOREANG ---
-            ['Pasar Lakessi ', -4.004092, 119.627335, 88, 450],
-            ['Polsek Soreang ', -3.990735, 119.651813, 20, 100],
-            ['MAN 1 Parepare ', -3.983912, 119.640791, 40, 150],
-            ['Kebun Raya Jompie Parepare', -3.99705, 119.64098, 15, 50],
-            ['UPTD SD Negeri 23 Parepare', -4.003799, 119.633485, 92, 850],
+            // KECAMATAN SOREANG
+            ['Pasar Lakessi', -4.004092, 119.627335, 55, 350],          // TR-08
+            ['Polsek Soreang', -3.990735, 119.651813, 40, 150],         // TR-09
+            ['MAN 1 Parepare', -3.983912, 119.640791, 35, 180],         // TR-10
+            ['Kebun Raya Jompie Parepare', -3.99705, 119.64098, 20, 100], // TR-11
+            ['UPTD SD Negeri 23 Parepare', -4.003799, 119.633485, 92, 880], // TR-12 ✅
 
-            // --- 3. KECAMATAN BACUKIKI BARAT ---
-            ['RS dr. Hasri Ainun Habibie ', -4.048255, 119.621842, 90, 850], 
-            ['Islamic Center ', -4.015792, 119.623808, 30, 150],
-            ['RSUD Andi Makassau',-4.03525, 119.63425, 50, 200],
-            ['Kantor Kecamatan Bacukiki Barat', -4.042680, 119.627396, 75, 600],
-            ['SMAN 2 Parepare', -4.038579, 119.627541, 82, 300],
+            // KECAMATAN BACUKIKI BARAT
+            ['RS dr. Hasri Ainun Habibie', -4.048255, 119.621842, 55, 300], // TR-13
+            ['Islamic Center', -4.015792, 119.623808, 40, 180],             // TR-14
+            ['RSUD Andi Makassau', -4.03525, 119.63425, 45, 250],           // TR-15
+            ['Kantor Kecamatan Bacukiki Barat', -4.042680, 119.627396, 50, 400], // TR-16
+            ['SMAN 2 Parepare', -4.038579, 119.627541, 55, 350],            // TR-17
 
-            // --- 4. KECAMATAN BACUKIKI ---
-            ['Puskesmas Lompoe ', -4.015252, 119.657346, 40, 850],
-            ['Perumahan Grand Sulawesi ', -4.00746, 119.66094, 25, 100],
-            ['UPTD SMP Negeri 8 Parepare', -4.015911, 119.647229, 85, 750],
-            ['Kantor Kelurahan Lompoe', -4.017151, 119.651037, 65, 400],
-            ['Lapas Kelas IIA Parepare', -4.003751, 119.666948, 95, 900], 
+            // KECAMATAN BACUKIKI
+            ['Puskesmas Lompoe', -4.015252, 119.657346, 95, 900],      // TR-18 ✅
+            ['Perumahan Grand Sulawesi', -4.00746, 119.66094, 35, 150], // TR-19
+            ['UPTD SMP Negeri 8 Parepare', -4.015911, 119.647229, 45, 300], // TR-20
+            ['Kantor Kelurahan Lompoe', -4.017151, 119.651037, 50, 400], // TR-21
+            ['Lapas Kelas IIA Parepare', -4.003751, 119.666948, 60, 500], // TR-22
         ];
 
         $idCounter = 3;
@@ -282,7 +283,7 @@ class DashboardController extends Controller
 
         if ($request->filled('search')) {
             $query->where('lokasi', 'like', '%' . $request->search . '%')
-                  ->orWhere('device_id', 'like', '%' . $request->search . '%');
+                 ->orWhere('device_id', 'like', '%' . $request->search . '%');
         }
 
         if ($request->filled('tanggal')) {

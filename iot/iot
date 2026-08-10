@@ -1,0 +1,76 @@
+#include <WiFi.h>
+#include <ThingsBoard.h>
+#include <Arduino_MQTT_Client.h>
+
+// --- KONFIGURASI WIFI ---
+#define WIFI_SSID "waw"
+#define WIFI_PASSWORD "1234567810"
+
+// --- KONFIGURASI THINGSBOARD ---
+#define THINGSBOARD_SERVER "thingsboard.cloud"
+#define TOKEN "zISoFto9nOdWTAJ7CRGw" 
+
+// --- KONFIGURASI PIN SENSOR ---
+#define TRIG_PIN 26
+#define ECHO_PIN 25
+#define GAS_PIN 34 
+const int MAX_TINGGI = 50; 
+
+WiFiClient espClient;
+Arduino_MQTT_Client mqttClient(espClient);
+ThingsBoard tb(mqttClient);
+
+unsigned long lastSendTime = 0;
+const unsigned long intervalKirim = 5000; 
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Menghubungkan ke WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\n[SUKSES] WiFi Terhubung!");
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    return;
+  }
+
+  if (!tb.connected()) {
+    Serial.print("Menghubungkan ke: ");
+    Serial.println(THINGSBOARD_SERVER);
+    
+    // Mencoba koneksi ke kluster cloud
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, 1883)) {
+      Serial.println("Gagal terhubung! Pastikan Access Token benar di thingsboard.cloud");
+      delay(3000);
+      return;
+    }
+    Serial.println("Berhasil Terhubung ke ThingsBoard Cloud!");
+    tb.sendAttributeData("status", "online");
+  }
+
+  if (millis() - lastSendTime >= intervalKirim) {
+    lastSendTime = millis();
+
+    digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    int distance = duration * 0.034 / 2;
+    int persentase = map(constrain(MAX_TINGGI - distance, 0, MAX_TINGGI), 0, MAX_TINGGI, 0, 100);
+    int nilaiBau = analogRead(GAS_PIN);
+
+    Serial.printf("Kirim -> Persen: %d%%, Bau: %d\n", persentase, nilaiBau);
+    tb.sendTelemetryData("persen", persentase);
+    tb.sendTelemetryData("bau", nilaiBau);
+  }
+  tb.loop();
+}
